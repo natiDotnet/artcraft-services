@@ -43,14 +43,14 @@ const Pricing = () => {
   }, []);
 
   return (
-    <div className="relative min-h-full bg-ui-background text-white">
+    <div className="relative min-h-full bg-ui-background text-base-fg dark:text-white">
       <Seo
         title="Pricing - ArtCraft"
         description="Simple, transparent pricing for ArtCraft. Start for free and scale as you grow."
       />
       <main className="pb-16">
         {!isSeedanceRef && (
-          <div className="border-t border-white/15 bg-primary text-white">
+          <div className="border-t border-black/10 dark:border-white/15 bg-primary text-white">
             <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-x-6 gap-y-1 px-6 py-2.5 md:px-10">
               <p className="pricing-hud flex items-center gap-2 font-bold">
                 <TagIcon aria-hidden className="h-3.5 w-3.5" />
@@ -74,7 +74,7 @@ const Pricing = () => {
             }
           />
           <div className="px-6 py-14 md:px-10 md:py-20">
-            <h1 className="max-w-3xl font-display text-4xl font-medium leading-[1.02] tracking-[-0.035em] sm:text-5xl md:text-6xl">
+            <h1 className="max-w-3xl font-display text-4xl font-medium leading-[1.02] tracking-[-0.035em] sm:text-5xl md:text-6xl text-base-fg dark:text-white">
               {isSeedanceRef ? (
                 <>
                   Seedance 2.0 is{" "}
@@ -84,7 +84,7 @@ const Pricing = () => {
                 "Pick a plan"
               )}
             </h1>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/55">
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-black/60 dark:text-white/60">
               {isSeedanceRef
                 ? "Generate jaw-dropping AI videos with Seedance 2.0 before it's available anywhere else. Every paid plan includes video credits, so you can start creating right now."
                 : "Get a ton of generations and invest in a tool you'll always own. Your subscription helps keep ArtCraft free and open for everyone."}
@@ -92,7 +92,7 @@ const Pricing = () => {
             {hasPlan && (
               <Button
                 variant="secondary"
-                className="mt-6 gap-2 rounded-none text-[11px]"
+                className="mt-6 gap-2 rounded-lg text-xs"
                 onClick={() => setCreditsModalOpen(true)}
               >
                 <CoinsIcon aria-hidden className="h-4 w-4" />
@@ -156,20 +156,20 @@ const Pricing = () => {
         <PricingSection id="credits">
           <div className="grid md:grid-cols-2">
             <div className="p-6 md:p-10">
-              <p className="pricing-hud text-white/40">
+              <p className="pricing-hud text-black/50 dark:text-white/40">
                 {isLoggedIn ? "Need more credits?" : "Already have an account?"}
               </p>
               <h2 className="mt-4 font-display text-2xl font-medium tracking-[-0.02em]">
                 One-time credit packs
               </h2>
-              <p className="mt-2 max-w-md leading-relaxed text-white/55">
+              <p className="mt-2 max-w-md leading-relaxed text-black/60 dark:text-white/55">
                 Top up in Ethiopian Birr — 1 ETB = 1 Credit. Credit packs never
                 expire.
               </p>
               {isLoggedIn ? (
                 <Button
                   variant="secondary"
-                  className="mt-6 gap-2 rounded-none text-[11px]"
+                  className="mt-6 gap-2 rounded-xl text-xs"
                   onClick={() => setCreditsModalOpen(true)}
                 >
                   <CoinsIcon aria-hidden className="h-4 w-4 text-primary" />
@@ -178,34 +178,34 @@ const Pricing = () => {
               ) : (
                 <Link
                   to="/login?from=%2Fpricing"
-                  className="pricing-hud mt-6 inline-flex border border-white/15 px-4 py-3 hover:bg-white/10"
+                  className="pricing-hud mt-6 inline-flex rounded-xl border border-black/10 dark:border-white/15 px-4 py-3 hover:bg-black/5 dark:hover:bg-white/10"
                 >
                   Sign in to buy credits
                 </Link>
               )}
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {ETB_CREDIT_PACKS.map((pack) => (
-                  <div key={pack.id} className="border border-white/15 p-5">
+                  <div key={pack.id} className="rounded-xl border border-black/10 dark:border-white/15 bg-white dark:bg-[#121317] p-5 shadow-sm">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="font-display text-xl font-semibold text-white">
+                      <span className="font-display text-xl font-semibold text-base-fg dark:text-white">
                         {pack.priceEtb.toLocaleString()} ETB
                       </span>
                       {pack.badge && (
-                        <span className="pricing-hud text-primary">
+                        <span className="pricing-hud text-primary font-bold">
                           {pack.badge}
                         </span>
                       )}
                     </div>
-                    <p className="mt-2 text-sm text-white/70">
+                    <p className="mt-2 text-sm text-black/70 dark:text-white/70">
                       {pack.credits.toLocaleString()} credits
                       {pack.bonus ? (
-                        <span className="text-white/40">
+                        <span className="text-black/40 dark:text-white/40">
                           {" "}
                           · +{pack.bonus.toLocaleString()} bonus
                         </span>
                       ) : null}
                     </p>
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="mt-1 text-xs text-black/50 dark:text-white/40">
                       {pack.credits.toLocaleString()} fast images or{" "}
                       {Math.floor(pack.credits / CREDITS_PER_5_SEC_VIDEO)} AI
                       videos
@@ -214,9 +214,9 @@ const Pricing = () => {
                 ))}
               </div>
             </div>
-            <div className="border-t border-white/15 p-6 md:border-l md:border-t-0 md:p-10">
-              <p className="pricing-hud text-white/40">† Footnote</p>
-              <p className="mt-4 max-w-md leading-relaxed text-white/55">
+            <div className="border-t border-black/10 dark:border-white/15 p-6 md:border-l md:border-t-0 md:p-10">
+              <p className="pricing-hud text-black/50 dark:text-white/40">† Footnote</p>
+              <p className="mt-4 max-w-md leading-relaxed text-black/60 dark:text-white/55">
                 ArtCraft can be used without paying for a subscription. You can
                 bring your own compute and third-party subscriptions. We hope
                 you’ll subscribe, though, as that helps accelerate our
@@ -244,8 +244,8 @@ function PricingSection({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="border-t border-white/15">
-      <div className="relative mx-auto max-w-[1280px] border-x border-white/15">
+    <section id={id} className="border-t border-black/10 dark:border-white/15">
+      <div className="relative mx-auto max-w-[1280px] border-x border-black/10 dark:border-white/15">
         {children}
       </div>
     </section>
@@ -262,12 +262,12 @@ function SectionLabel({
   annotation: string;
 }) {
   return (
-    <div className="pricing-hud flex items-center justify-between gap-4 border-b border-white/15 px-6 py-3 text-white/55 md:px-10">
+    <div className="pricing-hud flex items-center justify-between gap-4 border-b border-black/10 dark:border-white/15 px-6 py-3 text-black/60 dark:text-white/55 md:px-10">
       <p>
-        <span className="text-white/40">{index} / </span>
+        <span className="text-black/40 dark:text-white/40">{index} / </span>
         {label}
       </p>
-      <p className="hidden text-white/40 sm:block">{annotation}</p>
+      <p className="hidden text-black/40 dark:text-white/40 sm:block">{annotation}</p>
     </div>
   );
 }
