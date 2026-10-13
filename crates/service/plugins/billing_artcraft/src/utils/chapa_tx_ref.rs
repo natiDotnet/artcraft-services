@@ -115,6 +115,13 @@ fn decode_pack_id(s: &str) -> Option<String> {
     other => {
       if crate::configs::credits_packs::etb_credits_pack_info_list::get_etb_credits_pack_by_id(other).is_some() {
         Some(other.to_string())
+      } else if let Ok(n) = other.parse::<u64>() {
+        let canonical = format!("etb_{}", n);
+        if crate::configs::credits_packs::etb_credits_pack_info_list::get_etb_credits_pack_by_id(&canonical).is_some() {
+          Some(canonical)
+        } else {
+          None
+        }
       } else {
         None
       }

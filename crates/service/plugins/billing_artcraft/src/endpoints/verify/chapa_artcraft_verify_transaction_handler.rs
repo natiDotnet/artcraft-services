@@ -280,8 +280,9 @@ mod tests {
   #[test]
   fn test_paid_amount_maybe_mismatch() {
     assert!(!paid_amount_maybe_mismatch(150_000, 150_000));
-    assert!(!paid_amount_maybe_mismatch(150_000, 149_999)); // 1 cent tolerance
-    assert!(paid_amount_maybe_mismatch(150_000, 149_998));
-    assert!(paid_amount_maybe_mismatch(150_000, 150_001));
+    assert!(!paid_amount_maybe_mismatch(150_000, 149_999)); // 1 cent tolerance below
+    assert!(!paid_amount_maybe_mismatch(150_000, 150_001)); // 1 cent tolerance above
+    assert!(paid_amount_maybe_mismatch(150_000, 149_998));  // 2 cents tolerance exceeds
+    assert!(paid_amount_maybe_mismatch(150_000, 150_002));  // 2 cents tolerance exceeds
   }
 }

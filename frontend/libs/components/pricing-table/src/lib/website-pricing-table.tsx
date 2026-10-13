@@ -2,10 +2,10 @@ import { useState } from "react";
 import {
   ArrowRightIcon,
   CheckIcon,
-  CopyIcon,
+  CoinsIcon,
   GemIcon,
-  MailIcon,
   StarIcon,
+  ZapIcon,
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { Button } from "@storyteller/ui-button";
@@ -39,14 +39,14 @@ const PLAN_META: Record<
   },
 };
 
-const CONTACT_EMAIL = "hello@storyteller.ai";
-const ENTERPRISE_FEATURES = [
-  "Bespoke credit allocation",
-  "Secure dedicated models",
-  "Support SLAs & priority queue",
-  "Custom API integrations",
+const PAY_AS_YOU_GO_FEATURES = [
+  "Top up anytime with Telebirr & CBE",
+  "Credits never expire",
+  "Full access to all AI models",
+  "Bonus credits on larger packs",
   "Commercial license & ownership",
 ];
+
 const TRUST_POINTS = [
   "Cancel anytime",
   "Telebirr, CBE Birr & cards via Chapa",
@@ -59,7 +59,7 @@ interface WebsitePricingTableProps {
   cadence: BillingCadence;
   onCadenceChange: (cadence: BillingCadence) => void;
   showSeedanceFeatures: boolean;
-  showEnterprise: boolean;
+  showEnterprise?: boolean;
   activePlanSlug: string | null;
   displayName?: string;
   loading: boolean;
@@ -67,6 +67,7 @@ interface WebsitePricingTableProps {
   managing: boolean;
   onChoose: (slug: string) => void;
   onManage: () => void;
+  onPayAsYouGo?: (amount?: number) => void;
 }
 
 export function WebsitePricingTable({
@@ -82,6 +83,7 @@ export function WebsitePricingTable({
   managing,
   onChoose,
   onManage,
+  onPayAsYouGo,
 }: WebsitePricingTableProps) {
   const hasActivePlan = !!activePlanSlug && activePlanSlug !== "free";
 
@@ -136,6 +138,8 @@ export function WebsitePricingTable({
       {/* Pricing Cards Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 items-stretch">
+          <PayAsYouGoCard onChoose={onPayAsYouGo} />
+
           {plans.map((plan) => (
             <PlanCard
               key={plan.slug}
@@ -149,8 +153,6 @@ export function WebsitePricingTable({
               onChoose={() => onChoose(plan.slug)}
             />
           ))}
-
-          {showEnterprise && <EnterpriseCard />}
         </div>
 
         {/* Trust Badges & Portal */}
@@ -227,7 +229,7 @@ function PlanCard({
     >
       {/* Popular Badge Floating on Top */}
       {isPopular && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow-md">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow-md whitespace-nowrap">
           <StarIcon className="h-3 w-3 fill-white" />
           Most Popular
         </div>
@@ -336,80 +338,168 @@ function PlanCard({
   );
 }
 
-function EnterpriseCard() {
-  const [copied, setCopied] = useState(false);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(CONTACT_EMAIL);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // ignore
-    }
+export function calculateCreditsForEtb(amountEtb: number): {
+  credits: number;
+  bonus: number;
+  bonusPct: number;
+} {
+  const safe = Math.max(0, Math.floor(amountEtb));
+  let bonus = 0;
+  let bonusPct = 0;
+  if (safe >= 1000) {
+    bonus = Math.floor(safe / 5);
+    bonusPct = 20;
+  } else if (safe >= 500) {
+    bonus = Math.floor((safe * 3) / 25);
+    bonusPct = 12;
+  } else if (safe >= 300) {
+    bonus = Math.floor(safe / 15);
+    bonusPct = 7;
+  }
+  return {
+    credits: safe + bonus,
+    bonus,
+    bonusPct,
   };
+}
+
+const PRESET_AMOUNTS = [100, 300, 500, 1000];
+
+function PayAsYouGoCard({
+  onChoose,
+}: {
+  onChoose?: (amount?: number) => void;
+}) {
+  const [amountInput, setAmountInput] = useState<string>("500");
+  const parsed = parseInt(amountInput.replace(/[^0-9]/g, ""), 10);
+  const amount = Number.isFinite(parsed) ? parsed : 0;
+  const isValid = amount >= 50;
+  const calculation = calculateCreditsForEtb(amount);
 
   return (
     <div className="relative flex flex-col justify-between rounded-2xl p-7 transition-all duration-200 bg-white dark:bg-[#121317] border border-black/10 dark:border-white/10 shadow-sm hover:border-black/25 dark:hover:border-white/25 hover:shadow-md">
       <div>
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-display text-2xl font-bold tracking-tight text-base-fg dark:text-white">
-            Enterprise
+            Pay as you go
           </h3>
-          <span className="inline-flex rounded-full bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400">
-            For Teams
+          <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400">
+            <ZapIcon className="h-3 w-3" />
+            Flexible
           </span>
         </div>
 
         <p className="mt-1 text-sm text-black/60 dark:text-white/60 min-h-[2.5rem]">
-          Bespoke volume, security & dedicated infrastructure
+          No monthly commitment. Top up credits whenever you need them.
         </p>
 
-        {/* Pricing */}
-        <div className="mt-5 pb-5 border-b border-black/10 dark:border-white/10">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-display text-4xl font-extrabold tracking-tight text-base-fg dark:text-white">
-              Custom
-            </span>
+        {/* Pricing / Custom Amount Input */}
+        <div className="mt-5 pb-5 border-b border-black/10 dark:border-white/10 space-y-3">
+          <div>
+            <label
+              htmlFor="custom-etb-amount"
+              className="block text-xs font-semibold uppercase tracking-wider text-black/50 dark:text-white/50 mb-1.5"
+            >
+              Choose or enter amount
+            </label>
+            <div className="relative flex items-center">
+              <input
+                id="custom-etb-amount"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={amountInput}
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/[^0-9]/g, "");
+                  setAmountInput(cleaned);
+                }}
+                placeholder="500"
+                className="w-full rounded-xl bg-black/[0.03] dark:bg-white/[0.06] border border-black/15 dark:border-white/15 px-3.5 py-2 text-lg font-bold text-base-fg dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary tabular-nums pr-16"
+              />
+              <span className="absolute right-3.5 text-xs font-bold uppercase tracking-wider text-black/50 dark:text-white/50 pointer-events-none">
+                ETB
+              </span>
+            </div>
           </div>
-          <div className="mt-1.5 text-xs text-black/50 dark:text-white/50">
-            Tailored pricing & payment terms
+
+          {/* Quick presets */}
+          <div className="grid grid-cols-4 gap-1.5">
+            {PRESET_AMOUNTS.map((preset) => {
+              const active = amount === preset;
+              return (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setAmountInput(String(preset))}
+                  className={twMerge(
+                    "py-1 px-1.5 text-xs font-semibold rounded-lg border transition-all text-center",
+                    active
+                      ? "bg-primary text-white border-primary shadow-xs"
+                      : "bg-black/[0.03] dark:bg-white/[0.05] border-black/10 dark:border-white/10 text-black/70 dark:text-white/70 hover:bg-black/[0.06] dark:hover:bg-white/10",
+                  )}
+                >
+                  {preset.toLocaleString()}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Dynamic Credits Output */}
+          <div className="pt-2">
+            {isValid ? (
+              <div className="flex items-baseline justify-between gap-2">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-display text-3xl font-extrabold tracking-tight text-base-fg dark:text-white">
+                    {calculation.credits.toLocaleString()}
+                  </span>
+                  <span className="text-xs font-medium text-black/50 dark:text-white/50">
+                    credits
+                  </span>
+                </div>
+                {calculation.bonus > 0 ? (
+                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    +{calculation.bonus.toLocaleString()} bonus (+{calculation.bonusPct}%)
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-black/40 dark:text-white/40">
+                    1 ETB = 1 Credit
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                Minimum top-up is 50 ETB
+              </div>
+            )}
+            <div className="mt-1 text-xs text-black/50 dark:text-white/50">
+              Credits never expire · Telebirr &amp; CBE Birr
+            </div>
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="mt-6 flex gap-2">
-          <Button
-            as="link"
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="flex-1 h-11 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-base-fg dark:text-white border border-black/10 dark:border-white/15 text-sm font-semibold tracking-wide transition-all shadow-sm justify-center"
-          >
-            <MailIcon className="h-4 w-4 mr-1.5" />
-            Contact us
-          </Button>
-          <Button
-            type="button"
-            onClick={copy}
-            aria-label={copied ? "Email copied" : "Copy email address"}
-            className="h-11 w-11 p-0 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-base-fg dark:text-white border border-black/10 dark:border-white/15 transition-all shadow-sm flex items-center justify-center shrink-0"
-          >
-            {copied ? (
-              <CheckIcon className="h-4 w-4 text-emerald-500" />
-            ) : (
-              <CopyIcon className="h-4 w-4 text-black/60 dark:text-white/60" />
-            )}
-          </Button>
-        </div>
+        {/* CTA Button */}
+        <Button
+          type="button"
+          disabled={!isValid}
+          onClick={() => onChoose?.(amount)}
+          className="mt-6 w-full h-11 rounded-xl text-sm font-semibold tracking-wide transition-all shadow-sm bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-1.5 disabled:opacity-50"
+        >
+          <CoinsIcon className="h-4 w-4 shrink-0 text-amber-300" />
+          <span>
+            Buy {isValid ? `${amount.toLocaleString()} ETB` : "credits"}
+          </span>
+          <ArrowRightIcon className="h-4 w-4 ml-0.5" />
+        </Button>
 
         {/* Feature List */}
         <div className="mt-8">
           <p className="text-xs font-semibold uppercase tracking-wider text-black/40 dark:text-white/40 mb-3.5">
-            Everything in Max, plus
+            What's included
           </p>
           <ul className="space-y-3">
-            {ENTERPRISE_FEATURES.map((text, idx) => (
+            {PAY_AS_YOU_GO_FEATURES.map((text, idx) => (
               <li key={text} className="flex items-start gap-2.5 text-sm">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                   <CheckIcon className="h-3 w-3 stroke-[2.5]" />
                 </span>
                 <span

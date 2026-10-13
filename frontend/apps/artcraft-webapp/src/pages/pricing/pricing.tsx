@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CoinsIcon, TagIcon } from "lucide-react";
 import { Button } from "@storyteller/ui-button";
 import { BillingApi, UsersApi } from "@storyteller/api";
@@ -13,9 +13,11 @@ import { CreditsModal, ETB_CREDIT_PACKS } from "../../components/credits-modal";
 const CREDITS_PER_5_SEC_VIDEO = 20;
 
 const Pricing = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isSeedanceRef = searchParams.get("ref") === "sd2fakeyou";
   const [creditsModalOpen, setCreditsModalOpen] = useState(false);
+  const [customCreditsAmount, setCustomCreditsAmount] = useState<number | undefined>(undefined);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasPlan, setHasPlan] = useState(false);
 
@@ -150,7 +152,14 @@ const Pricing = () => {
             showHeader={false}
             websiteLayout
             showSeedanceFeatures
-            showEnterprise
+            onPayAsYouGo={(amount?: number) => {
+              setCustomCreditsAmount(amount);
+              if (isLoggedIn) {
+                setCreditsModalOpen(true);
+              } else {
+                navigate("/login?from=%2Fpricing");
+              }
+            }}
           />
         </PricingSection>
         <PricingSection id="credits">
@@ -229,7 +238,11 @@ const Pricing = () => {
       {isLoggedIn && (
         <CreditsModal
           isOpen={creditsModalOpen}
-          onClose={() => setCreditsModalOpen(false)}
+          initialAmount={customCreditsAmount}
+          onClose={() => {
+            setCreditsModalOpen(false);
+            setCustomCreditsAmount(undefined);
+          }}
         />
       )}
     </div>

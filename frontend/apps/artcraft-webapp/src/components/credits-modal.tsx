@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Modal } from "@storyteller/ui-modal";
 import { ArrowRightIcon, CoinsIcon, LoaderCircleIcon } from "lucide-react";
@@ -29,13 +29,57 @@ export const ETB_CREDIT_PACKS: EtbCreditPack[] = [
   },
 ];
 
+export function calculateCreditsForEtb(amountEtb: number): {
+  credits: number;
+  bonus: number;
+  bonusPct: number;
+} {
+  const safe = Math.max(0, Math.floor(amountEtb));
+  let bonus = 0;
+  let bonusPct = 0;
+  if (safe >= 1000) {
+    bonus = Math.floor(safe / 5);
+    bonusPct = 20;
+  } else if (safe >= 500) {
+    bonus = Math.floor((safe * 3) / 25);
+    bonusPct = 12;
+  } else if (safe >= 300) {
+    bonus = Math.floor(safe / 15);
+    bonusPct = 7;
+  }
+  return {
+    credits: safe + bonus,
+    bonus,
+    bonusPct,
+  };
+}
+
 interface CreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialAmount?: number;
 }
 
-export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
+export function CreditsModal({
+  isOpen,
+  onClose,
+  initialAmount,
+}: CreditsModalProps) {
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const [customAmountInput, setCustomAmountInput] = useState<string>(
+    initialAmount && initialAmount >= 50 ? String(initialAmount) : "500",
+  );
+
+  useEffect(() => {
+    if (isOpen && initialAmount && initialAmount >= 50) {
+      setCustomAmountInput(String(initialAmount));
+    }
+  }, [isOpen, initialAmount]);
+
+  const parsed = parseInt(customAmountInput.replace(/[^0-9]/g, ""), 10);
+  const customAmount = Number.isFinite(parsed) ? parsed : 0;
+  const isValidCustom = customAmount >= 50;
+  const customCalc = calculateCreditsForEtb(customAmount);
 
   const handlePurchase = async (pack: EtbCreditPack) => {
     setPurchasingId(pack.id);
@@ -76,7 +120,114 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
             1 ETB = 1 Credit • Telebirr, CBE Birr &amp; Cards supported.
           </p>
 
-          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {/* Custom Amount Entry Card */}
+          <div className="mt-7 rounded-2xl border border-white/20 bg-white/[0.04] p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+              <div>
+                <label
+                  htmlFor="modal-custom-amount"
+                  className="block text-xs font-semibold uppercase tracking-wider text-white/70"
+                >
+                  Custom Amount
+                </label>
+                <p className="text-xs text-white/40">
+                  Enter any ETB amount (minimum 50 ETB)
+                </p>
+              </div>
+
+              {/* Dynamic credits preview */}
+              {isValidCustom && (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold tracking-tight text-white">
+                    {customCalc.credits.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-white/50">credits</span>
+                  {customCalc.bonus > 0 && (
+                    <span className="rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+                      +{customCalc.bonus.toLocaleString()} bonus (+{customCalc.bonusPct}%)
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <div className="relative flex-1">
+                <input
+                  id="modal-custom-amount"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={customAmountInput}
+                  onChange={(e) => {
+                    const cleaned = e.target.value.replace(/[^0-9]/g, "");
+                    setCustomAmountInput(cleaned);
+                  }}
+                  placeholder="500"
+                  className="w-full rounded-xl bg-white/[0.06] border border-white/20 px-3.5 py-2.5 text-lg font-bold text-white focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary tabular-nums pr-16"
+                />
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold uppercase tracking-wider text-white/50 pointer-events-none">
+                  ETB
+                </span>
+              </div>
+
+              <button
+                type="button"
+                disabled={!isValidCustom || purchasingId !== null}
+                onClick={() =>
+                  handlePurchase({
+                    id: `etb_${customAmount}`,
+                    credits: customCalc.credits,
+                    priceEtb: customAmount,
+                    bonus: customCalc.bonus,
+                  })
+                }
+                className="h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white font-semibold text-sm transition-all shadow-sm flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer disabled:cursor-not-allowed"
+              >
+                {purchasingId === `etb_${customAmount}` ? (
+                  <LoaderCircleIcon className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <CoinsIcon className="h-4 w-4 text-amber-300" />
+                    <span>
+                      Pay {isValidCustom ? `${customAmount.toLocaleString()} ETB` : "custom"}
+                    </span>
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Presets Chips */}
+            <div className="flex flex-wrap items-center gap-1.5 mt-3">
+              <span className="text-[11px] text-white/40 mr-1">Presets:</span>
+              {[100, 300, 500, 1000, 2500].map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setCustomAmountInput(String(preset))}
+                  className={twMerge(
+                    "px-2.5 py-1 text-xs font-medium rounded-lg border transition-all",
+                    customAmount === preset
+                      ? "bg-white/20 border-white/40 text-white"
+                      : "bg-white/[0.03] border-white/10 text-white/60 hover:bg-white/[0.08] hover:text-white",
+                  )}
+                >
+                  {preset.toLocaleString()} ETB
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-xs uppercase tracking-wider text-white/40 font-semibold">
+              Or choose a featured pack
+            </span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
             {ETB_CREDIT_PACKS.map((pack) => {
               const isLoading = purchasingId === pack.id;
               const isPopular = !!pack.badge;

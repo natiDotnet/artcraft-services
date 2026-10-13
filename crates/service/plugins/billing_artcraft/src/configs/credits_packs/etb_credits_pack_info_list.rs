@@ -47,10 +47,31 @@ pub const ETB_CREDITS_PACK_LIST : [EtbCreditsPackInfo; 4] = [
 ];
 
 pub fn get_etb_credits_pack_by_id(id: &str) -> Option<EtbCreditsPackInfo> {
-  ETB_CREDITS_PACK_LIST
-    .iter()
-    .find(|pack| pack.id == id)
-    .copied()
+  if let Some(pack) = ETB_CREDITS_PACK_LIST.iter().find(|pack| pack.id == id).copied() {
+    return Some(pack);
+  }
+
+  // Support arbitrary custom ETB top-up amounts (e.g. "etb_250", "etb_750", "c_500")
+  let clean_id = id
+    .strip_prefix("c_")
+    .or_else(|| id.strip_prefix("custom_"))
+    .or_else(|| id.strip_prefix("etb_"))?;
+
+  if let Ok(amount) = clean_id.parse::<u64>() {
+    if amount >= crate::configs::credits_packs::calculate_credits_for_etb::MINIMUM_CUSTOM_ETB_TOP_UP {
+      let credits_awarded = crate::configs::credits_packs::calculate_credits_for_etb::calculate_credits_for_etb(amount);
+      let bonus_credits = credits_awarded.saturating_sub(amount);
+      return Some(EtbCreditsPackInfo {
+        id: Box::leak(id.to_string().into_boxed_str()),
+        etb_price: amount,
+        credits_awarded,
+        bonus_credits,
+        badge: None,
+      });
+    }
+  }
+
+  None
 }
 
 #[cfg(test)]
@@ -70,9 +91,12 @@ mod tests {
 
     #[test]
     fn lookup_misses_unknown_ids() {
-      assert_eq!(get_etb_credits_pack_by_id("etb_999"), None);
+      assert_eq!(get_etb_credits_pack_by_id("etb_unknown"), None);
+      assert_eq!(get_etb_credits_pack_by_id("etb_10"), None); // below MINIMUM_CUSTOM_ETB_TOP_UP (50)
       assert_eq!(get_etb_credits_pack_by_id("artcraft_1000"), None);
       assert_eq!(get_etb_credits_pack_by_id(""), None);
+      // Valid custom amount resolves dynamically
+      assert!(get_etb_credits_pack_by_id("etb_999").is_some());
     }
 
     #[test]

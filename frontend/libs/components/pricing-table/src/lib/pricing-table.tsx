@@ -59,6 +59,7 @@ interface PricingTableProps {
   /** Use the unified landing3-style monochrome theme instead of per-plan
    * green/purple/orange color schemes. */
   unifiedTheme?: boolean;
+  onPayAsYouGo?: (amount?: number) => void;
 }
 
 const PricingTable = ({
@@ -72,6 +73,7 @@ const PricingTable = ({
   showSeedanceFeatures = false,
   showEnterprise = false,
   unifiedTheme = false,
+  onPayAsYouGo,
 }: PricingTableProps) => {
   const navigate = useNavigate();
   const [billingType, setBillingType] = useState("yearly");
@@ -294,6 +296,7 @@ const PricingTable = ({
           managing={isCancelling}
           onChoose={handlePlanClick}
           onManage={handleCancelPlan}
+          onPayAsYouGo={onPayAsYouGo}
         />
       </div>
     );
