@@ -8,11 +8,17 @@ use crate::configs::subscriptions::etb_artcraft_subscription_info::EtbSubscripti
 /// responses, so it must carry everything we need to fulfill the payment:
 /// who is paying and for what. It is also the `user_spend_events`
 /// `source_object_id` dedup anchor (payment_source = 'chapa'), so uniqueness
-/// matters: we append a unix-nanosecond timestamp.
+/// matters.
 ///
-/// Format (dash-separated -- user tokens, plan slugs, and ETB pack ids never
-/// contain dashes):
+/// CRITICAL: Chapa strictly enforces that `tx_ref` must NOT exceed 50 characters.
 ///
+/// Compact format (dash-separated):
+/// - Subscription: `s-{user_token}-{slug_code}-{period_code}-{hex_millis}`
+///   (e.g., `s-user_6neje6w8f1487-p-m-19280d46380` -> 36 chars)
+/// - Credits pack: `p-{user_token}-{pack_code}-{hex_millis}`
+///   (e.g., `p-user_6neje6w8f1487-1000-19280d46380` -> 37 chars)
+///
+/// Legacy format (for backwards compatibility):
 /// - Subscription: `artcraft-sub-{user_token}-{plan_slug}-{period}-{nanos}`
 /// - Credits pack: `artcraft-pack-{user_token}-{pack_id}-{nanos}`
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -42,15 +48,75 @@ impl ChapaTxRefPayload {
     decode_tx_ref(tx_ref)
   }
 
-  /// Build the `tx_ref` string to hand to Chapa.
+  /// Build the `tx_ref` string to hand to Chapa (guaranteed <= 50 chars).
   pub fn to_tx_ref(&self) -> String {
-    let nanos = Utc::now().timestamp_nanos_opt().unwrap_or_else(|| Utc::now().timestamp() * 1_000_000_000);
-    match self {
+    let millis = Utc::now().timestamp_millis();
+    let tx_ref = match self {
       Self::Subscription { user_token, slug, period } => {
-        format!("artcraft-sub-{}-{}-{}-{}", user_token, slug.to_str(), period.to_str(), nanos)
+        format!(
+          "s-{}-{}-{}-{:x}",
+          user_token,
+          encode_slug(*slug),
+          encode_period(*period),
+          millis
+        )
       }
       Self::CreditsPack { user_token, pack_id } => {
-        format!("artcraft-pack-{}-{}-{}", user_token, pack_id, nanos)
+        format!("p-{}-{}-{:x}", user_token, encode_pack_id(pack_id), millis)
+      }
+    };
+    debug_assert!(tx_ref.len() <= 50, "tx_ref {:?} exceeds 50 character limit", tx_ref);
+    tx_ref
+  }
+}
+
+fn encode_slug(slug: ArtcraftSubscriptionSlug) -> &'static str {
+  match slug {
+    ArtcraftSubscriptionSlug::ArtcraftBasic => "b",
+    ArtcraftSubscriptionSlug::ArtcraftPro => "p",
+    ArtcraftSubscriptionSlug::ArtcraftMax => "m",
+  }
+}
+
+fn decode_slug(s: &str) -> Option<ArtcraftSubscriptionSlug> {
+  match s {
+    "b" | "basic" | "artcraft_basic" => Some(ArtcraftSubscriptionSlug::ArtcraftBasic),
+    "p" | "pro" | "artcraft_pro" => Some(ArtcraftSubscriptionSlug::ArtcraftPro),
+    "m" | "max" | "artcraft_max" => Some(ArtcraftSubscriptionSlug::ArtcraftMax),
+    _ => ArtcraftSubscriptionSlug::from_str(s).ok(),
+  }
+}
+
+fn encode_period(period: EtbSubscriptionBillingPeriod) -> &'static str {
+  match period {
+    EtbSubscriptionBillingPeriod::Monthly => "m",
+    EtbSubscriptionBillingPeriod::Yearly => "y",
+  }
+}
+
+fn decode_period(s: &str) -> Option<EtbSubscriptionBillingPeriod> {
+  match s {
+    "m" | "monthly" => Some(EtbSubscriptionBillingPeriod::Monthly),
+    "y" | "yearly" => Some(EtbSubscriptionBillingPeriod::Yearly),
+    _ => EtbSubscriptionBillingPeriod::from_str(s).ok(),
+  }
+}
+
+fn encode_pack_id(pack_id: &str) -> &str {
+  pack_id.strip_prefix("etb_").unwrap_or(pack_id)
+}
+
+fn decode_pack_id(s: &str) -> Option<String> {
+  match s {
+    "100" | "etb_100" => Some("etb_100".to_string()),
+    "300" | "etb_300" => Some("etb_300".to_string()),
+    "500" | "etb_500" => Some("etb_500".to_string()),
+    "1000" | "etb_1000" => Some("etb_1000".to_string()),
+    other => {
+      if crate::configs::credits_packs::etb_credits_pack_info_list::get_etb_credits_pack_by_id(other).is_some() {
+        Some(other.to_string())
+      } else {
+        None
       }
     }
   }
@@ -59,51 +125,82 @@ impl ChapaTxRefPayload {
 /// Decode a `tx_ref` we generated. Returns `None` for anything that isn't
 /// ours (garbage input, other systems' references, etc).
 pub fn decode_tx_ref(tx_ref: &str) -> Option<ChapaTxRefPayload> {
-  let rest = tx_ref.strip_prefix("artcraft-")?;
-  let (kind, remainder) = rest.split_once('-')?;
+  // New short subscription format: "s-{user_token}-{slug}-{period}-{timestamp}"
+  if let Some(rest) = tx_ref.strip_prefix("s-") {
+    let mut parts = rest.split('-');
+    let user_token = parts.next()?;
+    let slug = decode_slug(parts.next()?)?;
+    let period = decode_period(parts.next()?)?;
+    let ts = parts.next()?;
+    if parts.next().is_some() || ts.is_empty() || user_token.is_empty() {
+      return None;
+    }
+    return Some(ChapaTxRefPayload::Subscription {
+      user_token: user_token.to_string(),
+      slug,
+      period,
+    });
+  }
 
-  match kind {
-    "sub" => {
-      // {user_token}-{slug}-{period}-{nanos}
-      let mut parts = remainder.split('-');
-      let user_token = parts.next()?;
-      let slug = ArtcraftSubscriptionSlug::from_str(parts.next()?).ok()?;
-      let period = EtbSubscriptionBillingPeriod::from_str(parts.next()?).ok()?;
-      let nanos = parts.next()?;
-      if parts.next().is_some() || nanos.is_empty() || user_token.is_empty() {
-        return None;
-      }
-      if nanos.parse::<i64>().is_err() {
-        return None;
-      }
-      Some(ChapaTxRefPayload::Subscription {
-        user_token: user_token.to_string(),
-        slug,
-        period,
-      })
+  // New short pack format: "p-{user_token}-{pack_id}-{timestamp}"
+  if let Some(rest) = tx_ref.strip_prefix("p-") {
+    let mut parts = rest.split('-');
+    let user_token = parts.next()?;
+    let pack_id = decode_pack_id(parts.next()?)?;
+    let ts = parts.next()?;
+    if parts.next().is_some() || ts.is_empty() || user_token.is_empty() {
+      return None;
     }
-    "pack" => {
-      // {user_token}-{pack_id}-{nanos}
-      let mut parts = remainder.split('-');
-      let user_token = parts.next()?;
-      let pack_id = parts.next()?;
-      let nanos = parts.next()?;
-      if parts.next().is_some() || nanos.is_empty() || user_token.is_empty() || pack_id.is_empty() {
-        return None;
+    return Some(ChapaTxRefPayload::CreditsPack {
+      user_token: user_token.to_string(),
+      pack_id,
+    });
+  }
+
+  // Legacy format support for backwards compatibility: "artcraft-sub-..." or "artcraft-pack-..."
+  if let Some(rest) = tx_ref.strip_prefix("artcraft-") {
+    let (kind, remainder) = rest.split_once('-')?;
+    match kind {
+      "sub" => {
+        let mut parts = remainder.split('-');
+        let user_token = parts.next()?;
+        let slug = decode_slug(parts.next()?)?;
+        let period = decode_period(parts.next()?)?;
+        let nanos = parts.next()?;
+        if parts.next().is_some() || nanos.is_empty() || user_token.is_empty() {
+          return None;
+        }
+        if nanos.parse::<i64>().is_err() {
+          return None;
+        }
+        Some(ChapaTxRefPayload::Subscription {
+          user_token: user_token.to_string(),
+          slug,
+          period,
+        })
       }
-      if nanos.parse::<i64>().is_err() {
-        return None;
+      "pack" => {
+        let mut parts = remainder.split('-');
+        let user_token = parts.next()?;
+        let pack_id = decode_pack_id(parts.next()?)?;
+        let nanos = parts.next()?;
+        if parts.next().is_some() || nanos.is_empty() || user_token.is_empty() {
+          return None;
+        }
+        if nanos.parse::<i64>().is_err() {
+          return None;
+        }
+        Some(ChapaTxRefPayload::CreditsPack {
+          user_token: user_token.to_string(),
+          pack_id,
+        })
       }
-      Some(ChapaTxRefPayload::CreditsPack {
-        user_token: user_token.to_string(),
-        pack_id: pack_id.to_string(),
-      })
+      _ => None,
     }
-    _ => None,
+  } else {
+    None
   }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -121,7 +218,8 @@ mod tests {
       };
 
       let tx_ref = payload.to_tx_ref();
-      assert!(tx_ref.starts_with("artcraft-sub-u_0123456789abcdefghij-artcraft_pro-yearly-"));
+      assert!(tx_ref.starts_with("s-u_0123456789abcdefghij-p-y-"));
+      assert!(tx_ref.len() <= 50, "tx_ref length {} exceeds 50", tx_ref.len());
 
       let decoded = ChapaTxRefPayload::from_tx_ref(&tx_ref).unwrap();
       assert_eq!(decoded, payload);
@@ -136,10 +234,35 @@ mod tests {
       };
 
       let tx_ref = payload.to_tx_ref();
-      assert!(tx_ref.starts_with("artcraft-pack-u_0123456789abcdefghij-etb_500-"));
+      assert!(tx_ref.starts_with("p-u_0123456789abcdefghij-500-"));
+      assert!(tx_ref.len() <= 50, "tx_ref length {} exceeds 50", tx_ref.len());
 
       let decoded = ChapaTxRefPayload::from_tx_ref(&tx_ref).unwrap();
       assert_eq!(decoded, payload);
+    }
+
+    #[test]
+    fn legacy_format_still_decodes() {
+      let legacy_sub = "artcraft-sub-u_0123456789abcdefghij-artcraft_pro-yearly-1728825123456789123";
+      let decoded_sub = ChapaTxRefPayload::from_tx_ref(legacy_sub).unwrap();
+      assert_eq!(
+        decoded_sub,
+        ChapaTxRefPayload::Subscription {
+          user_token: "u_0123456789abcdefghij".to_string(),
+          slug: ArtcraftSubscriptionSlug::ArtcraftPro,
+          period: EtbSubscriptionBillingPeriod::Yearly,
+        }
+      );
+
+      let legacy_pack = "artcraft-pack-u_0123456789abcdefghij-etb_500-1728825123456789123";
+      let decoded_pack = ChapaTxRefPayload::from_tx_ref(legacy_pack).unwrap();
+      assert_eq!(
+        decoded_pack,
+        ChapaTxRefPayload::CreditsPack {
+          user_token: "u_0123456789abcdefghij".to_string(),
+          pack_id: "etb_500".to_string(),
+        }
+      );
     }
 
     #[test]
@@ -147,11 +270,12 @@ mod tests {
       for slug in ArtcraftSubscriptionSlug::all_variants() {
         for period in [EtbSubscriptionBillingPeriod::Monthly, EtbSubscriptionBillingPeriod::Yearly] {
           let payload = ChapaTxRefPayload::Subscription {
-            user_token: "u_abcdef".to_string(),
+            user_token: "user_6neje6w8f1487".to_string(),
             slug,
             period,
           };
           let tx_ref = payload.to_tx_ref();
+          assert!(tx_ref.len() <= 50, "tx_ref length {} exceeds 50 for {:?}", tx_ref.len(), payload);
           assert_eq!(ChapaTxRefPayload::from_tx_ref(&tx_ref), Some(payload.clone()), "tx_ref: {}", tx_ref);
         }
       }
@@ -167,24 +291,26 @@ mod tests {
       assert!(ChapaTxRefPayload::from_tx_ref("some-other-system-123").is_none());
       assert!(ChapaTxRefPayload::from_tx_ref("artcraft-").is_none());
       assert!(ChapaTxRefPayload::from_tx_ref("artcraft-unknown-u_abc").is_none());
+      assert!(ChapaTxRefPayload::from_tx_ref("s-").is_none());
+      assert!(ChapaTxRefPayload::from_tx_ref("p-").is_none());
     }
 
     #[test]
     fn rejects_bad_plan_slug_or_period() {
-      assert!(ChapaTxRefPayload::from_tx_ref("artcraft-sub-u_abc-not_a_plan-monthly-123").is_none());
-      assert!(ChapaTxRefPayload::from_tx_ref("artcraft-sub-u_abc-artcraft_pro-weekly-123").is_none());
+      assert!(ChapaTxRefPayload::from_tx_ref("s-u_abc-not_a_plan-m-123").is_none());
+      assert!(ChapaTxRefPayload::from_tx_ref("s-u_abc-p-weekly-123").is_none());
     }
 
     #[test]
     fn rejects_bad_timestamp() {
-      assert!(ChapaTxRefPayload::from_tx_ref("artcraft-sub-u_abc-artcraft_pro-monthly-notanumber").is_none());
-      assert!(ChapaTxRefPayload::from_tx_ref("artcraft-pack-u_abc-etb_500-").is_none());
+      assert!(ChapaTxRefPayload::from_tx_ref("s-u_abc-p-m-").is_none());
+      assert!(ChapaTxRefPayload::from_tx_ref("p-u_abc-500-").is_none());
     }
 
     #[test]
     fn rejects_extra_fields() {
-      assert!(ChapaTxRefPayload::from_tx_ref("artcraft-pack-u_abc-etb_500-123-extra").is_none());
-      assert!(ChapaTxRefPayload::from_tx_ref("artcraft-sub-u_abc-artcraft_pro-monthly-123-extra").is_none());
+      assert!(ChapaTxRefPayload::from_tx_ref("p-u_abc-500-123-extra").is_none());
+      assert!(ChapaTxRefPayload::from_tx_ref("s-u_abc-p-m-123-extra").is_none());
     }
   }
 }
