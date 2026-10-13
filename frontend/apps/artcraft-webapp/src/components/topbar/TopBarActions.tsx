@@ -20,11 +20,15 @@ import {
   GiftIcon,
   ImagesIcon,
   LifeBuoyIcon,
+  MoonIcon,
   SettingsIcon,
+  SunIcon,
 } from "lucide-react";
 import { DiscordIcon } from "@storyteller/icons";
 import { Button } from "@storyteller/ui-button";
 import { PopoverMenu } from "@storyteller/ui-popover";
+import { ThemeToggle } from "../theme/ThemeToggle";
+import { useThemeStore } from "../../lib/theme-store";
 import {
   BillingApi,
   CreditsApi,
@@ -66,6 +70,7 @@ async function fetchHasPaidPlan(): Promise<boolean> {
 export function TopBarActions({ className }: { className?: string }) {
   const navigate = useNavigate();
   const { user, authChecked } = useSession();
+  const { resolvedTheme, toggleTheme } = useThemeStore();
   const [credits, setCredits] = useState<number | null>(null);
   const [hasPaidPlan, setHasPaidPlan] = useState<boolean | null>(null);
   const [creditsModalOpen, setCreditsModalOpen] = useState(false);
@@ -135,11 +140,13 @@ export function TopBarActions({ className }: { className?: string }) {
 
           <Link
             to="/library"
-            className="hidden sm:flex h-8 items-center gap-1.5 px-3 rounded-[3px] border border-white/15 hover:bg-white/10 hover:border-white/30 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/80 transition-colors"
+            className="hidden sm:flex h-8 items-center gap-1.5 px-3 rounded-[3px] border border-ui-border hover:bg-ui-controls font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/80 transition-colors"
           >
             <ImagesIcon className="text-[11px]" />
             My Library
           </Link>
+
+          <ThemeToggle />
 
           <Menu as="div" className="relative ml-1">
             <MenuButton className="flex h-8 w-8 overflow-hidden border border-white/15 focus:outline-none focus:ring-2 focus:ring-white/60 ring-offset-2 ring-offset-[#0b0b0c]">
@@ -161,10 +168,10 @@ export function TopBarActions({ className }: { className?: string }) {
             >
               <MenuItems
                 modal={false}
-                className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-[3px] bg-[#101014] border border-white/15 focus:outline-none overflow-hidden"
+                className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-[3px] bg-ui-panel border border-ui-panel-border focus:outline-none overflow-hidden"
               >
-                <div className="px-4 py-3 border-b border-white/15">
-                  <p className="text-sm font-medium text-white truncate">
+                <div className="px-4 py-3 border-b border-ui-panel-border">
+                  <p className="text-sm font-medium text-ui-ink truncate">
                     {user.display_name || user.username}
                   </p>
                 </div>
@@ -174,11 +181,34 @@ export function TopBarActions({ className }: { className?: string }) {
                       onClick={() => setSettingsOpen(true)}
                       className={twMerge(
                         active ? "bg-white/10" : "",
-                        "flex w-full items-center gap-2 px-4 py-2 text-sm text-white/70 transition-colors",
+                        "flex w-full items-center gap-2 px-4 py-2 text-sm text-base-fg/80 transition-colors",
                       )}
                     >
-                      <SettingsIcon className="text-[11px] text-white/50" />
+                      <SettingsIcon className="text-[11px] text-base-fg/50" />
                       Settings
+                    </button>
+                  )}
+                </MenuItem>
+                <MenuItem>
+                  {({ active }) => (
+                    <button
+                      onClick={toggleTheme}
+                      className={twMerge(
+                        active ? "bg-white/10" : "",
+                        "flex w-full items-center justify-between px-4 py-2 text-sm text-base-fg/80 transition-colors",
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        {resolvedTheme === "dark" ? (
+                          <SunIcon className="text-[11px] text-base-fg/50" />
+                        ) : (
+                          <MoonIcon className="text-[11px] text-base-fg/50" />
+                        )}
+                        <span>Theme</span>
+                      </div>
+                      <span className="font-mono text-[10px] uppercase text-base-fg/50">
+                        {resolvedTheme}
+                      </span>
                     </button>
                   )}
                 </MenuItem>
@@ -188,10 +218,10 @@ export function TopBarActions({ className }: { className?: string }) {
                       onClick={() => navigate("/support")}
                       className={twMerge(
                         active ? "bg-white/10" : "",
-                        "flex w-full items-center gap-2 px-4 py-2 text-sm text-white/70 transition-colors",
+                        "flex w-full items-center gap-2 px-4 py-2 text-sm text-base-fg/80 transition-colors",
                       )}
                     >
-                      <LifeBuoyIcon className="text-[11px] text-white/50" />
+                      <LifeBuoyIcon className="text-[11px] text-base-fg/50" />
                       Support
                     </button>
                   )}
@@ -205,10 +235,10 @@ export function TopBarActions({ className }: { className?: string }) {
                         onClick={() => navigate("/referrals")}
                         className={twMerge(
                           active ? "bg-white/10" : "",
-                          "flex w-full items-center gap-2 px-4 py-2 text-sm text-white/70 transition-colors",
+                          "flex w-full items-center gap-2 px-4 py-2 text-sm text-base-fg/80 transition-colors",
                         )}
                       >
-                        <GiftIcon className="text-[11px] text-white/50" />
+                        <GiftIcon className="text-[11px] text-base-fg/50" />
                         Referrals
                       </button>
                     )}
@@ -222,10 +252,10 @@ export function TopBarActions({ className }: { className?: string }) {
                       rel="noopener noreferrer"
                       className={twMerge(
                         active ? "bg-white/10" : "",
-                        "flex w-full items-center gap-2 px-4 py-2 text-sm text-white/70 transition-colors",
+                        "flex w-full items-center gap-2 px-4 py-2 text-sm text-base-fg/80 transition-colors",
                       )}
                     >
-                      <DiscordIcon className="text-[11px] text-white/50" />
+                      <DiscordIcon className="text-[11px] text-base-fg/50" />
                       Join Discord
                     </a>
                   )}
@@ -249,22 +279,23 @@ export function TopBarActions({ className }: { className?: string }) {
         </>
       ) : (
         <>
+          <ThemeToggle />
           <Link
             to="/pricing"
-            className="hidden lg:flex h-8 items-center gap-1.5 px-3 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+            className="hidden lg:flex h-8 items-center gap-1.5 px-3 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/70 hover:bg-ui-controls hover:text-base-fg transition-colors"
           >
             <GemIcon className="text-[11px]" />
             Pricing
           </Link>
           <Link
             to="/login"
-            className="h-8 flex items-center px-3 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            className="h-8 flex items-center px-3 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/80 hover:text-base-fg hover:bg-ui-controls transition-colors"
           >
             Login
           </Link>
           <Link
             to="/signup"
-            className="h-8 flex items-center gap-1.5 px-3.5 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-black bg-white hover:bg-white/80 transition-colors"
+            className="h-8 flex items-center gap-1.5 px-3.5 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-ui-background bg-base-fg hover:opacity-90 transition-opacity"
           >
             Sign up
           </Link>
@@ -302,13 +333,13 @@ function CreditsChip({
           {credits.toLocaleString()} ETB
         </span>
       }
-      buttonClassName="h-8 px-3 ps-2.5 bg-transparent hover:bg-white/10 border border-white/15 hover:border-white/30 shadow-none text-white/80 rounded-[3px] gap-1.5"
-      panelClassName="mt-2 bg-[#101014] border border-white/15 text-white rounded-[3px]"
+      buttonClassName="h-8 px-3 ps-2.5 bg-transparent hover:bg-ui-controls border border-ui-border shadow-none text-base-fg/80 rounded-[3px] gap-1.5"
+      panelClassName="mt-2 bg-ui-panel border border-ui-border text-base-fg rounded-[3px] shadow-lg"
     >
       {(close) => (
-        <div className="w-72 max-w-[calc(100vw-24px)] p-3 text-white">
+        <div className="w-72 max-w-[calc(100vw-24px)] p-3 text-base-fg">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm font-medium text-white/70">
+            <span className="text-sm font-medium text-base-fg/70">
               Balance: {credits.toLocaleString()} Credits (
               {credits.toLocaleString()} ETB)
             </span>
@@ -322,7 +353,7 @@ function CreditsChip({
               Buy credits
             </button>
           </div>
-          <div className="flex items-center gap-2 text-3xl font-semibold text-white tracking-tight">
+          <div className="flex items-center gap-2 text-3xl font-semibold text-base-fg tracking-tight">
             <CoinsIcon className="text-xl text-primary" />
             {credits.toLocaleString()}
           </div>

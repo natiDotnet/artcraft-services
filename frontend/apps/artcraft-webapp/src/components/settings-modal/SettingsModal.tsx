@@ -4,7 +4,10 @@ import {
   CreditCardIcon,
   KeyIcon,
   KeyboardIcon,
+  MonitorIcon,
+  MoonIcon,
   SettingsIcon,
+  SunIcon,
   UserIcon,
 } from "lucide-react";
 import { DynamicIcon } from "@storyteller/icons";
@@ -14,6 +17,7 @@ import { useModelPickerStyleStore } from "@storyteller/ui-popover";
 import { twMerge } from "tailwind-merge";
 import { useEnterToGenerateStore } from "../../lib/enter-to-generate-store";
 import { useLightboxSoundStore } from "../../lib/lightbox-sound-store";
+import { useThemeStore } from "../../lib/theme-store";
 import { useSession } from "../../lib/session";
 import { AccountSection } from "./AccountSection";
 import { ApiKeySection } from "./ApiKeySection";
@@ -54,7 +58,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="flex h-full flex-col sm:grid sm:grid-cols-12 sm:gap-3">
           <div className="relative shrink-0 border-b border-ui-panel-border p-4 sm:col-span-4 sm:border-b-0 sm:p-3 sm:pt-2 sm:after:absolute sm:after:right-0 sm:after:top-0 sm:after:h-full sm:after:w-px sm:after:bg-ui-panel-border">
             <div className="hidden items-center gap-2.5 py-0.5 sm:flex">
-              <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/60">
+              <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/60">
                 Settings
               </h2>
             </div>
@@ -65,10 +69,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   className={twMerge(
-                    "h-9 shrink-0 px-3 text-left transition-colors sm:w-full sm:px-2",
+                    "h-9 shrink-0 px-3 text-left transition-colors sm:w-full sm:px-2 rounded-[3px]",
                     tab === t.id
-                      ? "bg-white/10 text-white"
-                      : "text-white/70 hover:bg-white/[0.06] hover:text-white",
+                      ? "bg-ui-controls text-base-fg font-medium"
+                      : "text-base-fg/70 hover:bg-ui-controls/60 hover:text-base-fg",
                   )}
                 >
                   <div className="flex items-center gap-2.5 whitespace-nowrap text-sm">
@@ -82,7 +86,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
           <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto sm:col-span-8 sm:h-full pl-0.5">
             <div className="w-full border-b border-ui-panel-border px-4 py-2.5 sm:px-0">
-              <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/80">
+              <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/80">
                 {activeLabel}
               </h2>
             </div>
@@ -105,6 +109,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 }
 
 function GeneralPanel() {
+  const { theme, setTheme } = useThemeStore();
   const enterToGenerate = useEnterToGenerateStore((s) => s.enabled);
   const setEnterToGenerate = useEnterToGenerateStore((s) => s.setEnabled);
   const lightboxSound = useLightboxSoundStore((s) => s.soundEnabled);
@@ -115,8 +120,61 @@ function GeneralPanel() {
   const setCheatsheetSticky = useKeybindsStore((s) => s.setCheatsheetSticky);
 
   return (
-    <div className="space-y-4 text-base-fg">
-      <div className="flex flex-col gap-2 pt-3">
+    <div className="space-y-5 text-base-fg">
+      {/* Theme Selection */}
+      <div className="flex flex-col gap-2.5 pt-3 border-b border-ui-panel-border pb-5">
+        <div className="flex flex-col gap-0.5">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]">
+            Appearance
+          </p>
+          <p className="text-xs opacity-70">
+            Choose your preferred interface theme or automatically match your system appearance.
+          </p>
+        </div>
+        <div className="inline-flex items-center gap-1 rounded-[3px] border border-ui-panel-border bg-ui-controls p-1 w-fit">
+          <button
+            type="button"
+            onClick={() => setTheme("dark")}
+            className={twMerge(
+              "flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-mono transition-colors",
+              theme === "dark"
+                ? "bg-ui-panel text-base-fg shadow-sm font-semibold border border-ui-panel-border"
+                : "text-base-fg/70 hover:text-base-fg hover:bg-ui-panel/40",
+            )}
+          >
+            <MoonIcon className="h-3.5 w-3.5" />
+            <span>Dark</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTheme("light")}
+            className={twMerge(
+              "flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-mono transition-colors",
+              theme === "light"
+                ? "bg-ui-panel text-base-fg shadow-sm font-semibold border border-ui-panel-border"
+                : "text-base-fg/70 hover:text-base-fg hover:bg-ui-panel/40",
+            )}
+          >
+            <SunIcon className="h-3.5 w-3.5" />
+            <span>Light</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTheme("system")}
+            className={twMerge(
+              "flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-mono transition-colors",
+              theme === "system"
+                ? "bg-ui-panel text-base-fg shadow-sm font-semibold border border-ui-panel-border"
+                : "text-base-fg/70 hover:text-base-fg hover:bg-ui-panel/40",
+            )}
+          >
+            <MonitorIcon className="h-3.5 w-3.5" />
+            <span>System</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-0.5">
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]">
             Enter to generate

@@ -24,7 +24,7 @@ export function GalleryAutoplayToggle() {
     <div
       role="group"
       aria-label="Video preview playback"
-      className="flex items-center gap-0.5 rounded-[3px] border border-white/[0.08] bg-white/[0.04] p-0.5"
+      className="flex items-center gap-0.5 rounded-[3px] border border-ui-border bg-ui-controls p-0.5"
     >
       {OPTIONS.map(({ autoplay, icon, label }) => {
         const active = autoplayVideos === autoplay;
@@ -37,11 +37,11 @@ export function GalleryAutoplayToggle() {
               onClick={() => setAutoplayVideos(autoplay)}
               className={`flex h-6 w-6 items-center justify-center rounded-[3px] text-xs transition-colors ${
                 active
-                  ? "bg-white/10 text-white"
-                  : "text-white/45 hover:text-white/80"
+                  ? "bg-ui-panel text-base-fg shadow-sm border border-ui-border font-medium"
+                  : "text-base-fg/50 hover:text-base-fg hover:bg-ui-panel/50"
               }`}
             >
-              <DynamicIcon icon={icon} />
+              <DynamicIcon icon={icon} className="h-3.5 w-3.5" />
             </button>
           </Tooltip>
         );

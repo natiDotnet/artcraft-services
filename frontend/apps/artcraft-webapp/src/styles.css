@@ -4,10 +4,31 @@
 
 @layer base {
   :root {
-    /* Sidebar tokens (consumed by tailwind colors in tailwind.config.js).
-       Brutalist system: near-black surfaces, white/15 hairlines, white
-       accent for selection/focus. */
     color-scheme: dark;
+    --ui-background-rgb: 18 19 22;
+    --ui-panel-rgb: 16 16 20;
+    --ui-controls-rgb: 30 31 34;
+    --ui-ink-rgb: 242 241 238;
+    --base-fg: 242 241 238;
+
+    --ui-background: #121316;
+    --ui-panel: #101014;
+    --ui-panel-border: rgba(255, 255, 255, 0.15);
+    --ui-border: rgba(255, 255, 255, 0.15);
+    --ui-controls: #1e1f22;
+    --ui-controls-button: #1e1f22;
+    --ui-controls-border: rgba(255, 255, 255, 0.15);
+    --ui-divider: rgba(255, 255, 255, 0.15);
+    --ui-modal: #101014;
+    --ui-ink: #f2f1ee;
+    --ui-accent-ink: #74aaff;
+    --ui-sunken: #060607;
+
+    --corner-mark-color: rgba(242, 241, 238, 0.4);
+    --empty-section-border: rgba(242, 241, 238, 0.2);
+    --empty-section-bg: rgba(242, 241, 238, 0.015);
+
+    /* Sidebar tokens */
     --sidebar-bg: #1e1f22;
     --sidebar-fg: rgba(255, 255, 255, 0.72);
     --sidebar-border: rgba(255, 255, 255, 0.15);
@@ -15,9 +36,7 @@
     --sidebar-accent-fg: #ffffff;
     --sidebar-ring: #74aaff;
 
-    /* shadcn design tokens consumed by @storyteller/ui-video-editor.
-       Dark-theme palette (the editor only runs in dark mode today).
-       --primary matches the webapp's brand blue (#2d81ff). */
+    /* shadcn design tokens */
     --background: 225 10% 8%;
     --foreground: 0 0% 98%;
     --card: 240 11% 7%;
@@ -59,6 +78,67 @@
     --dur-base: 220ms;
     --dur-slow: 340ms;
     --dur-page: 260ms;
+  }
+
+  html.light,
+  [data-theme="light"] {
+    color-scheme: light;
+    --ui-background-rgb: 244 245 248;
+    --ui-panel-rgb: 255 255 255;
+    --ui-controls-rgb: 241 243 246;
+    --ui-ink-rgb: 15 23 42;
+    --base-fg: 15 23 42;
+
+    --ui-background: #f4f5f8;
+    --ui-panel: #ffffff;
+    --ui-panel-border: rgba(0, 0, 0, 0.08);
+    --ui-border: rgba(0, 0, 0, 0.08);
+    --ui-controls: #f1f3f6;
+    --ui-controls-button: #ffffff;
+    --ui-controls-border: rgba(0, 0, 0, 0.12);
+    --ui-divider: rgba(0, 0, 0, 0.08);
+    --ui-modal: #ffffff;
+    --ui-ink: #0f172a;
+    --ui-accent-ink: #2563eb;
+    --ui-sunken: #e9ecef;
+
+    --corner-mark-color: rgba(15, 23, 42, 0.25);
+    --empty-section-border: rgba(0, 0, 0, 0.12);
+    --empty-section-bg: rgba(0, 0, 0, 0.02);
+
+    /* Sidebar tokens */
+    --sidebar-bg: #f8fafc;
+    --sidebar-fg: rgba(15, 23, 42, 0.72);
+    --sidebar-border: rgba(0, 0, 0, 0.08);
+    --sidebar-accent: rgba(0, 0, 0, 0.05);
+    --sidebar-accent-fg: #0f172a;
+    --sidebar-ring: #2563eb;
+
+    /* shadcn design tokens */
+    --background: 210 25% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 216 100% 54%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 0% / 0.1;
+    --input: 0 0% 0% / 0.1;
+    --ring: 217 100% 50%;
+  }
+
+  body {
+    background-color: var(--ui-background);
+    color: var(--ui-ink);
   }
 
   /* Respect users who ask for less motion: collapse durations to near-zero
@@ -535,17 +615,106 @@
   margin: -5px;
   pointer-events: none;
   background:
-    linear-gradient(rgba(242, 241, 238, 0.4), rgba(242, 241, 238, 0.4)) center / 1px 11px no-repeat,
-    linear-gradient(rgba(242, 241, 238, 0.4), rgba(242, 241, 238, 0.4)) center / 11px 1px no-repeat;
+    linear-gradient(var(--corner-mark-color), var(--corner-mark-color)) center / 1px 11px no-repeat,
+    linear-gradient(var(--corner-mark-color), var(--corner-mark-color)) center / 11px 1px no-repeat;
 }
 
 /* Contained section borders match the landing without decorative extensions. */
 .create-empty-section {
   margin-inline: 12px;
-  border: 1px solid rgba(242, 241, 238, 0.2);
-  background: rgba(242, 241, 238, 0.015);
+  border: 1px solid var(--empty-section-border);
+  background: var(--empty-section-bg);
 }
 
 @media (min-width: 640px) {
   .create-empty-section { margin-inline: 32px; }
 }
+
+/* ── Light Theme Adaptations ─────────────────────────────────────────── */
+html.light body {
+  background-color: var(--ui-background);
+  color: var(--ui-ink);
+}
+
+html.light .app-logo {
+  filter: brightness(0);
+}
+
+html.light .icon-auto-contrast {
+  filter: none;
+}
+
+html.light .glass {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+
+html.light .liquid-glass {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Contrast overrides for common text and border utilities in light theme */
+html.light .text-white {
+  color: var(--ui-ink);
+}
+html.light .text-white\/90 {
+  color: rgba(15, 23, 42, 0.9);
+}
+html.light .text-white\/80 {
+  color: rgba(15, 23, 42, 0.8);
+}
+html.light .text-white\/70 {
+  color: rgba(15, 23, 42, 0.7);
+}
+html.light .text-white\/60 {
+  color: rgba(15, 23, 42, 0.6);
+}
+html.light .text-white\/50 {
+  color: rgba(15, 23, 42, 0.5);
+}
+html.light .text-white\/45 {
+  color: rgba(15, 23, 42, 0.45);
+}
+html.light .text-white\/40 {
+  color: rgba(15, 23, 42, 0.4);
+}
+html.light .border-white\/10,
+html.light .border-white\/15,
+html.light .border-white\/\[0\.08\] {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+html.light .border-white\/20,
+html.light .border-white\/25,
+html.light .border-white\/30 {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+html.light .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+html.light .bg-white\/5,
+html.light .bg-white\/\[0\.04\],
+html.light .bg-white\/\[0\.03\] {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+html.light .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+html.light .hover\:bg-white\/\[0\.06\]:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+html.light .hover\:text-white:hover {
+  color: var(--ui-ink);
+}
+
+html.light * {
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+html.light *::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+html.light *::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+

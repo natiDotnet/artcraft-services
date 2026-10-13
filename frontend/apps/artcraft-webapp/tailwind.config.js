@@ -4,6 +4,7 @@ import colors from "tailwindcss/colors";
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ["class", '[data-theme="dark"]'],
   content: [
     join(
       __dirname,
@@ -168,7 +169,7 @@ module.exports = {
         900: "#3d3d3d",
         950: "#3E3E41",
       },
-      "base-fg": "rgb(242 241 238 / <alpha-value>)",
+      "base-fg": "rgb(var(--base-fg) / <alpha-value>)",
       sidebar: {
         DEFAULT: "var(--sidebar-bg)",
         foreground: "var(--sidebar-fg)",
@@ -178,21 +179,18 @@ module.exports = {
         ring: "var(--sidebar-ring)",
       },
       ui: {
-        // Brutalist system: near-black surfaces with white/15 hairline
-        // borders, aligned with artcraft-website + artcraft-website-next.
-        background: "#121316",
-        panel: "#101014",
-        "panel-border": "rgb(255 255 255 / 0.15)",
-        border: "rgb(255 255 255 / 0.15)",
-        // Raised controls stay distinct from the website-matched panel surface.
-        controls: "#1e1f22",
-        "controls-button": "#1e1f22",
-        "controls-border": "rgb(255 255 255 / 0.15)",
-        divider: "rgb(255 255 255 / 0.15)",
-        modal: "#101014",
-        ink: "#f2f1ee",
-        "accent-ink": "#74aaff",
-        sunken: "#060607",
+        background: "rgb(var(--ui-background-rgb) / <alpha-value>)",
+        panel: "rgb(var(--ui-panel-rgb) / <alpha-value>)",
+        "panel-border": "var(--ui-panel-border)",
+        border: "var(--ui-border)",
+        controls: "rgb(var(--ui-controls-rgb) / <alpha-value>)",
+        "controls-button": "rgb(var(--ui-controls-rgb) / <alpha-value>)",
+        "controls-border": "var(--ui-controls-border)",
+        divider: "var(--ui-divider)",
+        modal: "rgb(var(--ui-panel-rgb) / <alpha-value>)",
+        ink: "rgb(var(--ui-ink-rgb) / <alpha-value>)",
+        "accent-ink": "var(--ui-accent-ink)",
+        sunken: "var(--ui-sunken)",
       },
       "axis-x": "#D33242",
       "axis-y": "#308752",
