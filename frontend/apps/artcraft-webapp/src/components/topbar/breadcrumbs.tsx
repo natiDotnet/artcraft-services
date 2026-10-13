@@ -23,6 +23,7 @@ const ROUTE_CRUMBS: Record<string, Crumb[]> = {
     { label: "Studio", href: "/" },
     { label: "Frame Extractor" },
   ],
+  "/chat": [{ label: "Studio", href: "/" }, { label: "Chat" }],
   "/referrals": [{ label: "Referrals" }],
   "/media": [{ label: "Library", href: "/library" }, { label: "Media" }],
   "/pricing": [{ label: "Pricing" }],

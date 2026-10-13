@@ -10,6 +10,7 @@ import {
 import { LoaderCircleIcon } from "lucide-react";
 import { useGlobalKeybinds } from "@storyteller/keybinds";
 import Home from "../pages/home";
+import StudioChat from "../pages/chat";
 import Media from "../pages/media";
 import { ToastContainer } from "../components/toast/toast";
 import CreateImage from "../pages/create-image";
@@ -166,6 +167,7 @@ export function App() {
             inside the create pages pop a signup CTA modal for logged-out users. */}
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/chat" element={<StudioChat />} />
           <Route path="/create-image" element={<CreateImage />} />
           <Route path="/create-video" element={<CreateVideo />} />
           <Route path="/create-audio" element={<CreateAudio />} />

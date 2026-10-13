@@ -23,6 +23,9 @@ export interface ChatModelDto {
   name: string;
   provider: string;
   cost_credits: number;
+  price_per_1m_tokens_etb?: number;
+  input_price_per_1m_etb?: number;
+  output_price_per_1m_etb?: number;
   badge?: string;
   description: string;
 }

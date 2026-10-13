@@ -16,6 +16,7 @@ import {
   MusicIcon,
   NewspaperIcon,
   PencilIcon,
+  SparklesIcon,
   VideoIcon,
   WandSparklesIcon,
 } from "lucide-react";
@@ -52,6 +53,7 @@ type NavItem = {
 
 const PRIMARY_ITEMS: NavItem[] = [
   { label: "Home", href: "/", icon: HouseIcon },
+  { label: "AI Studio", href: "/chat", icon: SparklesIcon, badge: "NEW" },
 ];
 
 // Generation entries — make something from a prompt.

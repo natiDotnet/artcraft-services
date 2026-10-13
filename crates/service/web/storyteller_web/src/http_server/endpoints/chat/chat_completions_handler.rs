@@ -8,15 +8,21 @@ use utoipa::ToSchema;
 use crate::billing::wallets::attempt_wallet_deduction::attempt_wallet_deduction_else_common_web_error;
 use crate::http_server::common_responses::common_web_error::CommonWebError;
 use crate::state::server_state::ServerState;
-use openrouter_client::{
-  get_studio_tools, ChatCompletionRequest, ChatMessage, OpenRouterClient,
-};
+use openrouter_client::{ChatCompletionRequest, ChatMessage, OpenRouterClient};
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct ChatMessagePayload {
+  pub role: String,
+  pub content: String,
+  #[serde(default)]
+  pub name: Option<String>,
+}
 
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct ChatCompletionsPayload {
   #[serde(default)]
   pub model: Option<String>,
-  pub messages: Vec<ChatMessage>,
+  pub messages: Vec<ChatMessagePayload>,
   #[serde(default)]
   pub temperature: Option<f32>,
   #[serde(default)]
@@ -60,7 +66,7 @@ pub async fn chat_completions_handler(
     ));
   }
 
-  // 3. Credit deduction (1 ETB = 1 Credit per turn)
+  // 3. Credit deduction (1 ETB = 1 Credit)
   attempt_wallet_deduction_else_common_web_error(
     &user_session.user_token,
     Some("openrouter_chat"),
@@ -84,15 +90,27 @@ pub async fn chat_completions_handler(
     .with_base_url(&openrouter_config.base_url)
     .with_site_info(&openrouter_config.site_url, &openrouter_config.app_name);
 
+  // Map messages to OpenRouter format
+  let mut messages: Vec<ChatMessage> = payload
+    .messages
+    .iter()
+    .map(|m| ChatMessage {
+      role: m.role.clone(),
+      content: m.content.clone(),
+      name: m.name.clone(),
+      tool_calls: None,
+      tool_call_id: None,
+    })
+    .collect();
+
   // Inject system instructions if not already present
-  let mut messages = payload.messages.clone();
   if !messages.iter().any(|m| m.role == "system") {
     messages.insert(
       0,
       ChatMessage::system(
-        "You are ArtCraft Studio Assistant, a creative partner for artists, designers, and storytellers. \
-         You help generate ideas, refine prompts, and create visuals. When the user asks you to create, \
-         generate, or show an image or video, use the generate_image or generate_video function.",
+        "You are ArtCraft AI, an advanced conversational intelligence. \
+         You assist users with dialogue, brainstorming, storytelling, technical explanations, \
+         creative ideation, and reasoning.",
       ),
     );
   }
@@ -103,30 +121,33 @@ pub async fn chat_completions_handler(
     stream: true,
     temperature: payload.temperature,
     max_tokens: None,
-    tools: Some(get_studio_tools()),
+    tools: None,
   };
 
   // 5. Connect and stream from OpenRouter
   let stream = client
     .stream_chat(request)
     .await
-    .map_err(|e| {
-      error!("Failed to connect to OpenRouter: {:?}", e);
-      CommonWebError::BadInputWithSimpleMessage(format!("OpenRouter error: {}", e))
+    .map_err(|err| {
+      error!("OpenRouter streaming error: {:?}", err);
+      CommonWebError::BadInputWithSimpleMessage(format!("Inference provider error: {}", err))
     })?;
 
-  let mapped_stream = stream.map(|item| {
-    item.map_err(|e| {
-      error!("Error during OpenRouter streaming: {:?}", e);
-      actix_web::error::ErrorInternalServerError(e)
-    })
+  // Stream SSE bytes directly
+  let sse_stream = stream.map(|chunk_res| match chunk_res {
+    Ok(chunk) => Ok::<web::Bytes, actix_web::Error>(web::Bytes::from(chunk)),
+    Err(e) => {
+      error!("Stream chunk error: {:?}", e);
+      Ok::<web::Bytes, actix_web::Error>(web::Bytes::from(format!(
+        "data: {{\"error\": \"{}\"}}\n\n",
+        e
+      )))
+    }
   });
 
   Ok(
     HttpResponse::Ok()
       .content_type("text/event-stream")
-      .insert_header(("Cache-Control", "no-cache"))
-      .insert_header(("Connection", "keep-alive"))
-      .streaming(mapped_stream),
+      .streaming(sse_stream),
   )
 }

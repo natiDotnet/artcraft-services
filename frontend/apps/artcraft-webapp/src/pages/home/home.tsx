@@ -2,12 +2,14 @@ import { Link } from "react-router-dom";
 import {
   ArrowRightIcon,
   BoxIcon,
+  CoinsIcon,
   FilmIcon,
   GlobeIcon,
   GroupIcon,
   ImageIcon,
   ImagesIcon,
   MusicIcon,
+  SparklesIcon,
   VideoIcon,
   WandSparklesIcon,
 } from "lucide-react";
@@ -132,6 +134,43 @@ export function Home() {
       <p className="mt-4 max-w-xl text-sm leading-relaxed text-base-fg/70 sm:text-base">
         Start with an idea. Choose a tool to bring it to life.
       </p>
+
+      {/* Featured Conversational AI Studio */}
+      <Reveal y={15} delay={0.05} className="mt-6">
+        <Link
+          to="/chat"
+          className="group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-900/20 via-indigo-950/20 to-black/40 p-6 shadow-xl backdrop-blur-md transition-all hover:border-purple-400/60 hover:shadow-purple-500/10 hover:-translate-y-0.5"
+        >
+          <div className="flex items-start sm:items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white shadow-lg shadow-purple-500/30 group-hover:scale-105 transition-transform">
+              <SparklesIcon className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-lg font-bold text-white tracking-tight">
+                  ArtCraft AI Studio
+                </h3>
+                <span className="rounded-full bg-purple-500/20 border border-purple-500/40 px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-purple-300">
+                  NEW
+                </span>
+                <span className="flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-mono text-amber-300">
+                  <CoinsIcon className="h-2.5 w-2.5" />
+                  1 ETB = 1 Credit
+                </span>
+              </div>
+              <p className="mt-1 text-xs sm:text-sm text-white/70 max-w-xl leading-relaxed">
+                Chat with DeepSeek, Claude 3.5 &amp; GPT-4o. Brainstorm concepts, compose prompts, and generate images or videos directly in a modern conversational interface.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+            <span className="rounded-xl bg-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-md group-hover:bg-purple-500 transition-colors flex items-center gap-1.5">
+              Launch Studio Chat
+              <ArrowRightIcon className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </div>
+        </Link>
+      </Reveal>
 
       <section className="mt-8 border-t border-ui-border pt-6 sm:mt-10">
         <Reveal
