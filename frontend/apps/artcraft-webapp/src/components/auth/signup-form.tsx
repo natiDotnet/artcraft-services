@@ -114,7 +114,7 @@ export const SignupForm = ({
         }}
       >
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 text-sm text-center">
+          <div className="rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 text-sm text-center">
             {error}
           </div>
         )}
@@ -152,17 +152,18 @@ export const SignupForm = ({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-md text-black/40 hover:text-black/80 hover:bg-black/5 dark:text-white/40 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 tabIndex={-1}
               >
-                <DynamicIcon icon={showPassword ? EyeOffIcon : EyeIcon} />
+                <DynamicIcon icon={showPassword ? EyeOffIcon : EyeIcon} className="h-4 w-4" />
               </button>
             </div>
           </div>
 
           <div className="pt-2">
             <Button
-              className="w-full justify-center h-10"
+              className="w-full justify-center h-10 rounded-lg border border-black/20 hover:border-black/40 dark:border-transparent shadow-sm"
               type="submit"
               disabled={isLoading}
             >
@@ -177,8 +178,8 @@ export const SignupForm = ({
       </form>
 
       <div>
-        <div className="my-6 flex items-center gap-4 before:h-px before:flex-1 before:bg-white/15 after:h-px after:flex-1 after:bg-white/15">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">
+        <div className="my-6 flex items-center gap-4 before:h-px before:flex-1 before:bg-black/15 after:h-px after:flex-1 after:bg-black/15 dark:before:bg-white/15 dark:after:bg-white/15">
+          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-black/40 dark:text-white/40">
             or
           </span>
         </div>

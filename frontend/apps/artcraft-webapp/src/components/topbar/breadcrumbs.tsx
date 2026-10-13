@@ -93,7 +93,7 @@ export function Breadcrumbs() {
             {crumb.href && !isLast ? (
               <Link
                 to={crumb.href}
-                className="truncate px-1.5 py-0.5 rounded-[3px] hover:bg-ui-controls hover:text-base-fg transition-colors"
+                className="truncate px-2 py-0.5 rounded-full hover:bg-ui-controls hover:text-base-fg transition-colors"
               >
                 {crumb.label}
               </Link>
@@ -101,7 +101,7 @@ export function Breadcrumbs() {
               <span
                 className={
                   isLast
-                    ? "bg-ui-controls border border-ui-border px-2 py-0.5 text-base-fg font-medium rounded-[3px] truncate"
+                    ? "bg-ui-controls border border-ui-border px-2.5 py-0.5 text-base-fg font-medium rounded-full truncate"
                     : "truncate px-1.5 py-0.5"
                 }
                 aria-current={isLast ? "page" : undefined}

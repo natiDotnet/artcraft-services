@@ -26,7 +26,7 @@ export function GalleryViewToggle() {
     <div
       role="group"
       aria-label="Gallery layout"
-      className="flex items-center gap-0.5 rounded-[3px] border border-ui-border bg-ui-controls p-0.5"
+      className="flex items-center gap-0.5 rounded-lg border border-ui-border bg-ui-controls p-0.5"
     >
       {OPTIONS.map(({ mode, icon, label }) => {
         const active = viewMode === mode;
@@ -37,7 +37,7 @@ export function GalleryViewToggle() {
               aria-label={label}
               aria-pressed={active}
               onClick={() => setViewMode(mode)}
-              className={`flex h-6 w-6 items-center justify-center rounded-[3px] text-xs transition-colors ${
+              className={`flex h-6 w-6 items-center justify-center rounded-md text-xs transition-colors ${
                 active
                   ? "bg-ui-panel text-base-fg shadow-sm border border-ui-border font-medium"
                   : "text-base-fg/50 hover:text-base-fg hover:bg-ui-panel/50"

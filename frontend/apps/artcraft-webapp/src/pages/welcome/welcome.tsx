@@ -29,7 +29,7 @@ const Welcome = () => {
       <main className="relative z-10 pt-12 pb-20 px-4 sm:px-6 lg:px-8">
         {/* Success Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-3 bg-white/5 border border-white/15 px-6 py-3 mb-6">
+          <div className="inline-flex items-center gap-3 bg-white/5 border border-white/15 px-6 py-3 mb-6 rounded-full">
             <CircleCheckIcon className="text-xl text-green-400" />
             <span className="text-white font-medium">
               Account created successfully!
@@ -57,9 +57,9 @@ const Welcome = () => {
 
         {/* Create-in-browser CTA — desktop download is optional */}
         <div className="max-w-3xl mx-auto mb-8">
-          <div className="bg-[#101014] border border-white/15 p-8 md:p-10">
+          <div className="bg-[#101014] border border-white/15 p-8 md:p-10 rounded-2xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-white/10 flex items-center justify-center">
+              <div className="w-10 h-10 bg-white/10 flex items-center justify-center rounded-lg">
                 <WandSparklesIcon className="text-white/70 text-lg" />
               </div>
               <h2 className="text-2xl font-medium text-white">
@@ -83,7 +83,7 @@ const Welcome = () => {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className="group flex items-center gap-3 rounded-[3px] bg-ui-controls hover:bg-white/10 border border-white/15 hover:border-white/30 px-4 py-3 transition-all"
+                  className="group flex items-center gap-3 rounded-lg bg-ui-controls hover:bg-white/10 border border-white/15 hover:border-white/30 px-4 py-3 transition-all"
                 >
                   <DynamicIcon
                     icon={item.icon}
@@ -101,9 +101,9 @@ const Welcome = () => {
 
         {/* Desktop app alternative */}
         <div className="max-w-3xl mx-auto">
-          <div className="bg-[#101014] border border-white/15 p-8 md:p-10">
+          <div className="bg-[#101014] border border-white/15 p-8 md:p-10 rounded-2xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-white/10 flex items-center justify-center">
+              <div className="w-10 h-10 bg-white/10 flex items-center justify-center rounded-lg">
                 <MonitorIcon className="text-white/70 text-lg" />
               </div>
               <h2 className="text-2xl font-medium text-white">
@@ -125,9 +125,9 @@ const Welcome = () => {
               ].map((item) => (
                 <div
                   key={item.step}
-                  className="bg-ui-controls border border-white/15 p-4 flex items-center gap-4"
+                  className="bg-ui-controls border border-white/15 p-4 flex items-center gap-4 rounded-lg"
                 >
-                  <div className="w-8 h-8 shrink-0 bg-white/10 border border-white/15 flex items-center justify-center font-mono text-[11px] font-semibold text-white">
+                  <div className="w-8 h-8 shrink-0 bg-white/10 border border-white/15 flex items-center justify-center font-mono text-[11px] font-semibold text-white rounded-md">
                     {item.step}
                   </div>
                   <div className="text-white/90 font-medium">{item.text}</div>
@@ -146,7 +146,7 @@ const Welcome = () => {
                     <Button
                       as="link"
                       href={downloadUrl}
-                      className="bg-white text-black hover:bg-white/80 px-6 py-2.5"
+                      className="bg-white text-black hover:bg-white/80 px-6 py-2.5 rounded-lg"
                     >
                       <DownloadIcon className="mr-2" />
                       Download for {isMacOs ? "Mac" : "Windows"}

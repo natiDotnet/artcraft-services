@@ -165,7 +165,7 @@
   textarea,
   input:not([type="radio"]):not([type="range"]),
   [role="button"] {
-    border-radius: 3px;
+    border-radius: 8px;
   }
 }
 
@@ -369,7 +369,7 @@
    with white/15 hairline borders (class names kept for lib compatibility). */
 @layer components {
   .glass {
-    @apply relative border border-white/15 transition-colors duration-300 rounded-[3px] backdrop-blur-sm;
+    @apply relative border border-white/15 transition-colors duration-300 rounded-xl backdrop-blur-sm;
     @apply bg-[#1E1F22]/95 !important;
   }
 }
@@ -647,6 +647,7 @@ html.light .icon-auto-contrast {
 html.light .glass {
   background-color: rgba(255, 255, 255, 0.96) !important;
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 12px !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
 }
 

@@ -72,7 +72,7 @@ export function SignupCtaModal() {
     <Modal
       isOpen={isOpen}
       onClose={close}
-      className="w-full max-w-md overflow-hidden border border-white/15 bg-ui-modal p-0"
+      className="w-full max-w-md overflow-hidden rounded-2xl border border-white/15 bg-ui-modal p-0"
       allowBackgroundInteraction={false}
       showClose={true}
       closeOnOutsideClick={true}
@@ -95,7 +95,7 @@ export function SignupCtaModal() {
                 key={perk}
                 className="flex items-start gap-3 text-[14px] text-white/75"
               >
-                <span className="mt-[2px] flex h-4 w-4 shrink-0 items-center justify-center bg-white/10">
+                <span className="mt-[2px] flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/10">
                   <CheckIcon className="text-[9px] text-white" />
                 </span>
                 <span>{perk}</span>
@@ -105,13 +105,13 @@ export function SignupCtaModal() {
 
           <div className="mt-8 flex flex-col gap-3">
             {error && (
-              <div className="border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-sm text-red-500">
+              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-sm text-red-500">
                 {error}
               </div>
             )}
 
             <Link to={`/signup?from=${from}`} onClick={close} className="block">
-              <Button variant="primary" className="w-full h-10">
+              <Button variant="primary" className="w-full h-10 rounded-lg border border-black/20 hover:border-black/40 dark:border-transparent shadow-sm">
                 Create account with email
               </Button>
             </Link>

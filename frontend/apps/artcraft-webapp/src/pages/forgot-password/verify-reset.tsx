@@ -134,7 +134,7 @@ const VerifyReset = () => {
                 }}
               >
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 text-sm text-center">
+                  <div className="rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 text-sm text-center">
                     {error}
                   </div>
                 )}
@@ -178,10 +178,12 @@ const VerifyReset = () => {
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-md text-black/40 hover:text-black/80 hover:bg-black/5 dark:text-white/40 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
                     >
                       <DynamicIcon
                         icon={showNewPassword ? EyeOffIcon : EyeIcon}
+                        className="h-4 w-4"
                       />
                     </button>
                   </div>
@@ -212,10 +214,12 @@ const VerifyReset = () => {
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-md text-black/40 hover:text-black/80 hover:bg-black/5 dark:text-white/40 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                     >
                       <DynamicIcon
                         icon={showConfirmPassword ? EyeOffIcon : EyeIcon}
+                        className="h-4 w-4"
                       />
                     </button>
                   </div>
@@ -229,7 +233,7 @@ const VerifyReset = () => {
                 <div className="pt-2">
                   <Button
                     id="change-password-btn"
-                    className="w-full justify-center h-10"
+                    className="w-full justify-center h-10 rounded-lg border border-black/20 hover:border-black/40 dark:border-transparent shadow-sm"
                     type="submit"
                     disabled={isLoading}
                   >
@@ -254,7 +258,7 @@ const VerifyReset = () => {
           ) : (
             <>
               <div className="text-center py-8">
-                <div className="w-16 h-16 border border-white/15 bg-green-500/10 flex items-center justify-center mx-auto mb-4 text-green-500">
+                <div className="w-16 h-16 rounded-full border border-green-500/20 bg-green-500/10 flex items-center justify-center mx-auto mb-4 text-green-500">
                   <CircleCheckIcon className="text-2xl" />
                 </div>
                 <h3 className="text-xl font-medium mb-2">
@@ -266,7 +270,7 @@ const VerifyReset = () => {
                 </p>
                 <Button
                   id="back-to-homepage-btn"
-                  className="w-full justify-center h-10"
+                  className="w-full justify-center h-10 rounded-lg border border-black/20 hover:border-black/40 dark:border-transparent shadow-sm"
                   onClick={() => navigate(redirectTo)}
                 >
                   {redirectLabel}

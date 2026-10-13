@@ -111,7 +111,7 @@ export function TopBarActions({ className }: { className?: string }) {
         <>
           <Link
             to="/pricing"
-            className="hidden lg:flex h-8 items-center gap-1.5 px-3 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+            className="hidden lg:flex h-8 items-center gap-1.5 px-3 rounded-lg font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/70 hover:bg-white/10 hover:text-white transition-colors"
           >
             <GemIcon className="text-[11px]" />
             Pricing
@@ -130,7 +130,7 @@ export function TopBarActions({ className }: { className?: string }) {
               variant="primary"
               icon={GemIcon}
               onClick={() => navigate("/pricing")}
-              className="h-8 px-3"
+              className="h-8 px-3 rounded-lg"
             >
               Upgrade
             </Button>
@@ -140,7 +140,7 @@ export function TopBarActions({ className }: { className?: string }) {
 
           <Link
             to="/library"
-            className="hidden sm:flex h-8 items-center gap-1.5 px-3 rounded-[3px] border border-ui-border hover:bg-ui-controls font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/80 transition-colors"
+            className="hidden sm:flex h-8 items-center gap-1.5 px-3 rounded-lg border border-ui-border hover:bg-ui-controls font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/80 transition-colors"
           >
             <ImagesIcon className="text-[11px]" />
             My Library
@@ -149,7 +149,7 @@ export function TopBarActions({ className }: { className?: string }) {
           <ThemeToggle />
 
           <Menu as="div" className="relative ml-1">
-            <MenuButton className="flex h-8 w-8 overflow-hidden border border-white/15 focus:outline-none focus:ring-2 focus:ring-white/60 ring-offset-2 ring-offset-[#0b0b0c]">
+            <MenuButton className="flex h-8 w-8 overflow-hidden rounded-full border border-ui-border focus:outline-none focus:ring-2 focus:ring-base-fg/60 ring-offset-2 ring-offset-ui-background">
               <span className="sr-only">Open user menu</span>
               <img
                 className="h-full w-full object-cover"
@@ -282,20 +282,20 @@ export function TopBarActions({ className }: { className?: string }) {
           <ThemeToggle />
           <Link
             to="/pricing"
-            className="hidden lg:flex h-8 items-center gap-1.5 px-3 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/70 hover:bg-ui-controls hover:text-base-fg transition-colors"
+            className="hidden lg:flex h-8 items-center gap-1.5 px-3 rounded-lg font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/70 hover:bg-ui-controls hover:text-base-fg transition-colors"
           >
             <GemIcon className="text-[11px]" />
             Pricing
           </Link>
           <Link
             to="/login"
-            className="h-8 flex items-center px-3 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/80 hover:text-base-fg hover:bg-ui-controls transition-colors"
+            className="h-8 flex items-center px-3 rounded-lg font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-base-fg/80 hover:text-base-fg hover:bg-ui-controls transition-colors"
           >
             Login
           </Link>
           <Link
             to="/signup"
-            className="h-8 flex items-center gap-1.5 px-3.5 rounded-[3px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-ui-background bg-base-fg hover:opacity-90 transition-opacity"
+            className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-ui-background bg-base-fg hover:opacity-90 transition-opacity"
           >
             Sign up
           </Link>
@@ -333,8 +333,8 @@ function CreditsChip({
           {credits.toLocaleString()} ETB
         </span>
       }
-      buttonClassName="h-8 px-3 ps-2.5 bg-transparent hover:bg-ui-controls border border-ui-border shadow-none text-base-fg/80 rounded-[3px] gap-1.5"
-      panelClassName="mt-2 bg-ui-panel border border-ui-border text-base-fg rounded-[3px] shadow-lg"
+      buttonClassName="h-8 px-3 ps-2.5 bg-transparent hover:bg-ui-controls border border-ui-border shadow-none text-base-fg/80 rounded-lg gap-1.5"
+      panelClassName="mt-2 bg-ui-panel border border-ui-border text-base-fg rounded-xl shadow-lg"
     >
       {(close) => (
         <div className="w-72 max-w-[calc(100vw-24px)] p-3 text-base-fg">

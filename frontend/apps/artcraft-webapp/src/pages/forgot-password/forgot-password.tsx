@@ -67,7 +67,7 @@ const ForgotPassword = () => {
                 }}
               >
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 text-sm text-center">
+                  <div className="rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 text-sm text-center">
                     {error}
                   </div>
                 )}
@@ -89,7 +89,7 @@ const ForgotPassword = () => {
                 <div className="pt-2">
                   <Button
                     id="send-reset-btn"
-                    className="w-full justify-center h-10"
+                    className="w-full justify-center h-10 rounded-lg border border-black/20 hover:border-black/40 dark:border-transparent shadow-sm"
                     type="submit"
                     disabled={isLoading}
                   >
@@ -104,7 +104,7 @@ const ForgotPassword = () => {
             </>
           ) : (
             <div className="text-center py-8">
-              <div className="w-16 h-16 border border-white/15 bg-green-500/10 flex items-center justify-center mx-auto mb-4 text-green-500">
+              <div className="w-16 h-16 rounded-full border border-green-500/20 bg-green-500/10 flex items-center justify-center mx-auto mb-4 text-green-500">
                 <MailIcon className="text-2xl" />
               </div>
               <h3 className="text-xl font-medium mb-2">Check your email</h3>
@@ -113,12 +113,12 @@ const ForgotPassword = () => {
                 <span className="text-white font-medium">{email}</span>
               </p>
               <Link to={authContinuationUrl("/forgot-password/verify", from)}>
-                <Button className="w-full justify-center h-10 mb-3">
+                <Button className="w-full justify-center h-10 rounded-lg mb-3 border border-black/20 hover:border-black/40 dark:border-transparent shadow-sm">
                   Enter Verification Code
                 </Button>
               </Link>
               <Button
-                className="w-full bg-transparent border border-white/15 hover:bg-white/10 text-white justify-center h-10"
+                className="w-full bg-transparent border border-black/20 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10 text-base-fg dark:text-white justify-center h-10 rounded-lg"
                 onClick={() => setSubmitted(false)}
               >
                 Try another email

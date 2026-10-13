@@ -51,7 +51,7 @@ export const AuthLayout = () => {
 
         {/* Showcase pane (desktop only) */}
         {showShowcase && (
-          <div className="relative border-l border-white/15 lg:w-1/2">
+          <div className="relative border-l border-black/10 dark:border-white/15 lg:w-1/2">
             <AuthShowcase />
           </div>
         )}
@@ -69,19 +69,19 @@ export const AuthHeader = ({ title, subtitle }: AuthHeaderProps) => (
     <Link
       to="/"
       aria-label="ArtCraft home"
-      className="mb-8 inline-flex rounded-sm transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/60"
+      className="mb-8 inline-flex rounded-lg transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary dark:focus-visible:outline-white/60"
     >
       <img src="/artcraft-icon.svg" alt="ArtCraft" className="h-8 w-8" />
     </Link>
-    <h1 className="mb-3 text-balance font-display text-3xl leading-[1.05] tracking-tight sm:text-4xl">
+    <h1 className="mb-3 text-balance font-display text-3xl leading-[1.05] tracking-tight sm:text-4xl text-base-fg dark:text-white">
       {title}
     </h1>
-    <p className="text-sm leading-relaxed text-white/60">
+    <p className="text-sm leading-relaxed text-black/60 dark:text-white/60">
       {subtitle}
     </p>
   </div>
 );
 
 export const AuthFooter = ({ children }: { children: ReactNode }) => (
-  <div className="mt-8 text-center text-sm text-white/60">{children}</div>
+  <div className="mt-8 text-center text-sm text-black/60 dark:text-white/60">{children}</div>
 );

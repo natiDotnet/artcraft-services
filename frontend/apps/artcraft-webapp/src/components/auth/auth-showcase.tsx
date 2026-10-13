@@ -22,11 +22,11 @@ export const AuthShowcase = () => {
       />
 
       {/* Caption */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-8">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-8 text-white">
         <p className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/70">
           One of the cheapest
         </p>
-        <h2 className="text-2xl font-bold leading-tight">
+        <h2 className="text-2xl font-bold leading-tight text-white">
           Seedance 2.5 Video Generation
         </h2>
         <p className="mt-1 max-w-sm text-sm text-white/70">

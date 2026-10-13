@@ -60,7 +60,7 @@ export function GoogleLoginButton({
       className={`group relative w-full h-10 transition-transform duration-150 active:scale-95 ${className}`}
     >
       {/* Custom visual button - shown behind */}
-      <div className="absolute inset-0 w-full h-full flex items-center justify-center gap-3 rounded-[3px] bg-white text-black font-medium group-hover:bg-white/80 transition-colors">
+      <div className="absolute inset-0 w-full h-full flex items-center justify-center gap-3 rounded-lg border border-black/15 dark:border-transparent bg-white text-black font-medium shadow-sm group-hover:bg-black/5 dark:group-hover:bg-white/90 transition-colors">
         {isLoading ? (
           <LoaderCircleIcon className="animate-spin text-lg text-black/60" />
         ) : (
@@ -75,7 +75,7 @@ export function GoogleLoginButton({
 
       {/* Google's actual button - invisible overlay that receives clicks */}
       <div
-        className="absolute inset-0 w-full h-full overflow-hidden cursor-pointer flex items-center justify-center"
+        className="absolute inset-0 w-full h-full overflow-hidden cursor-pointer flex items-center justify-center rounded-lg"
         style={{ opacity: 0.01, zIndex: 10, transform: "scaleY(1.2)" }}
       >
         <GoogleLogin

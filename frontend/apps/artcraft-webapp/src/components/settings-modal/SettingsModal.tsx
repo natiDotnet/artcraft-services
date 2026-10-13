@@ -131,12 +131,12 @@ function GeneralPanel() {
             Choose your preferred interface theme or automatically match your system appearance.
           </p>
         </div>
-        <div className="inline-flex items-center gap-1 rounded-[3px] border border-ui-panel-border bg-ui-controls p-1 w-fit">
+        <div className="inline-flex items-center gap-1 rounded-lg border border-ui-panel-border bg-ui-controls p-1 w-fit">
           <button
             type="button"
             onClick={() => setTheme("dark")}
             className={twMerge(
-              "flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-mono transition-colors",
+              "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono transition-colors",
               theme === "dark"
                 ? "bg-ui-panel text-base-fg shadow-sm font-semibold border border-ui-panel-border"
                 : "text-base-fg/70 hover:text-base-fg hover:bg-ui-panel/40",
@@ -149,7 +149,7 @@ function GeneralPanel() {
             type="button"
             onClick={() => setTheme("light")}
             className={twMerge(
-              "flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-mono transition-colors",
+              "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono transition-colors",
               theme === "light"
                 ? "bg-ui-panel text-base-fg shadow-sm font-semibold border border-ui-panel-border"
                 : "text-base-fg/70 hover:text-base-fg hover:bg-ui-panel/40",
@@ -162,7 +162,7 @@ function GeneralPanel() {
             type="button"
             onClick={() => setTheme("system")}
             className={twMerge(
-              "flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-mono transition-colors",
+              "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono transition-colors",
               theme === "system"
                 ? "bg-ui-panel text-base-fg shadow-sm font-semibold border border-ui-panel-border"
                 : "text-base-fg/70 hover:text-base-fg hover:bg-ui-panel/40",

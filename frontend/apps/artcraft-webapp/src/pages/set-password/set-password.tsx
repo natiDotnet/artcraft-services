@@ -108,10 +108,11 @@ const SetPassword = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-md text-black/40 hover:text-black/80 hover:bg-black/5 dark:text-white/40 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   tabIndex={-1}
                 >
-                  <DynamicIcon icon={showPassword ? EyeOffIcon : EyeIcon} />
+                  <DynamicIcon icon={showPassword ? EyeOffIcon : EyeIcon} className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -131,11 +132,13 @@ const SetPassword = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-md text-black/40 hover:text-black/80 hover:bg-black/5 dark:text-white/40 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   tabIndex={-1}
                 >
                   <DynamicIcon
                     icon={showConfirmPassword ? EyeOffIcon : EyeIcon}
+                    className="h-4 w-4"
                   />
                 </button>
               </div>
@@ -143,7 +146,7 @@ const SetPassword = () => {
 
             <div className="pt-2">
               <Button
-                className="w-full justify-center h-10"
+                className="w-full justify-center h-10 rounded-lg border border-black/20 hover:border-black/40 dark:border-transparent shadow-sm"
                 type="submit"
                 disabled={isLoading}
               >
