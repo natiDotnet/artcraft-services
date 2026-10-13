@@ -11,6 +11,7 @@ pub struct InferenceProviders {
   pub kinovi_web: KinoviWebData,
   pub openai: OpenAiData,
   pub worldlabs: WorldLabsData,
+  pub openrouter: OpenRouterData,
 }
 
 /// Fal integration
@@ -61,6 +62,16 @@ pub struct WorldLabsData {
   pub api_key: String,
 }
 
+/// OpenRouter integration
+#[derive(Clone)]
+pub struct OpenRouterData {
+  pub api_key: String,
+  pub base_url: String,
+  pub default_model: String,
+  pub site_url: String,
+  pub app_name: String,
+}
+
 pub fn setup_inference_providers() -> AnyhowResult<InferenceProviders> {
   Ok(InferenceProviders {
     fal: FalData {
@@ -91,6 +102,13 @@ pub fn setup_inference_providers() -> AnyhowResult<InferenceProviders> {
     },
     worldlabs: WorldLabsData {
       api_key: easyenv::get_env_string_required("WORLDLABS_API_KEY")?,
+    },
+    openrouter: OpenRouterData {
+      api_key: easyenv::get_env_string_or_default("OPENROUTER_API_KEY", "unset"),
+      base_url: easyenv::get_env_string_or_default("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+      default_model: easyenv::get_env_string_or_default("OPENROUTER_DEFAULT_MODEL", "deepseek/deepseek-chat"),
+      site_url: easyenv::get_env_string_or_default("OPENROUTER_SITE_URL", "http://localhost:4201"),
+      app_name: easyenv::get_env_string_or_default("OPENROUTER_APP_NAME", "ArtCraft Studio"),
     },
   })
 }

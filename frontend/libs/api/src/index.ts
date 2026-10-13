@@ -34,4 +34,5 @@ export * from "./lib/models/Character.js";
 export * from "./lib/models/Folder.js";
 export * from "./lib/config/StorytellerApiHostStore.js";
 export * from "./lib/enums/EIntermediateFile.js";
+export * from "./lib/ChatApi.js";
 export { HttpApiError } from "./lib/ApiManager.js";

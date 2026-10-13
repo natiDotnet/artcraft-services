@@ -6118,6 +6118,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "openrouter_client"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "errors",
+ "futures 0.3.32",
+ "log",
+ "reqwest 0.12.23",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tokio",
+ "workspace-build-acceleration",
+]
+
+[[package]]
 name = "openssl-macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8764,6 +8781,7 @@ dependencies = [
  "mysql_testing",
  "once_cell",
  "opaque_cursors",
+ "openrouter_client",
  "pager",
  "password",
  "primitives",

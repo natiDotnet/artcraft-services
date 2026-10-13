@@ -4,6 +4,7 @@ pub mod app_state;
 pub mod beta_keys;
 pub mod billing_fakeyou;
 pub mod characters;
+pub mod chat;
 pub mod comments;
 pub mod craft_apps;
 pub mod credits;

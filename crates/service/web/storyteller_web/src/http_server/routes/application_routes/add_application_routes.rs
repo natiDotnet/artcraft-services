@@ -2,6 +2,7 @@ use crate::http_server::routes::application_routes::analytics_routes::add_analyt
 use crate::http_server::routes::application_routes::api_keys_routes::add_api_keys_routes;
 use crate::http_server::routes::application_routes::billing_fakeyou_routes::add_billing_fakeyou_routes;
 use crate::http_server::routes::application_routes::character_routes::add_character_routes;
+use crate::http_server::routes::application_routes::chat_routes::add_chat_routes;
 use crate::http_server::routes::application_routes::comments_routes::add_comments_routes;
 use crate::http_server::routes::application_routes::craft_apps_routes::add_craft_apps_routes;
 use crate::http_server::routes::application_routes::credits_routes::add_credits_routes;
@@ -55,6 +56,7 @@ where
   app = add_generate_routes(app); // /v1/generate/...
   app = add_omni_gen_routes(app); // /v1/omni_gen/...
   app = add_omni_api_routes(app); // /v1/omni_api/... (API-key authenticated generate)
+  app = add_chat_routes(app); // /v1/chat/... (OpenRouter conversational chat & completions)
   app = add_character_routes(app); // /v1/character/... and /v1/characters/...
   app = add_webhook_routes(app); // /v1/webhooks/... (fal)
   app = add_internal_routes(app); // /v1/internal/... (internal API key authenticated worker fleets)
