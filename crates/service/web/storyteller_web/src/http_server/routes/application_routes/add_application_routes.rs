@@ -18,6 +18,7 @@ use crate::http_server::routes::application_routes::omni_api_routes::add_omni_ap
 use crate::http_server::routes::application_routes::omni_gen_routes::add_omni_gen_routes;
 use crate::http_server::routes::application_routes::prompts_routes::add_prompts_routes;
 use crate::http_server::routes::application_routes::stripe_artcraft_routes::add_stripe_artcraft_routes;
+use crate::http_server::routes::application_routes::chapa_artcraft_routes::add_chapa_artcraft_routes;
 use crate::http_server::routes::application_routes::subscription_routes::add_subscription_routes;
 use crate::http_server::routes::application_routes::tag_routes::add_tag_routes;
 use crate::http_server::routes::application_routes::user_bookmarks_routes::add_user_bookmarks_routes;
@@ -91,6 +92,7 @@ where
   app = add_wallet_routes(app); // /v1/wallets/...
   app = add_credits_routes(app); // /v1/credits/...
   app = add_stripe_artcraft_routes(app); // /v1/stripe_artcraft/...
+  app = add_chapa_artcraft_routes(app); // /v1/chapa_artcraft/... (ETB rail)
   app = add_subscription_routes(app); // /v1/subscriptions/...
 
   // FakeYou Billing

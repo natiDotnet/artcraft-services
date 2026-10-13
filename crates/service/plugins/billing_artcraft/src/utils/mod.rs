@@ -1,5 +1,7 @@
 pub (crate) mod metadata;
+pub mod artcraft_chapa_config;
 pub mod artcraft_stripe_config;
+pub mod chapa_tx_ref;
 pub mod common_web_error;
 pub mod create_checkout;
 pub mod enum_conversion;

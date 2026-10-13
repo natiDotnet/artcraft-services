@@ -5,18 +5,28 @@ import { ArrowRightIcon, CoinsIcon, LoaderCircleIcon } from "lucide-react";
 import { BillingApi } from "@storyteller/api";
 import { toast } from "./toast/toast";
 
-interface CreditPack {
+export interface EtbCreditPack {
   id: string;
-  total: number;
-  priceUsd: number;
+  credits: number;
+  priceEtb: number;
+  bonus?: number;
   badge?: string;
 }
 
-const CREDIT_PACKS: CreditPack[] = [
-  { id: "artcraft_1000", total: 1000, priceUsd: 10 },
-  { id: "artcraft_2500", total: 2500, priceUsd: 25 },
-  { id: "artcraft_5000", total: 5000, priceUsd: 50, badge: "Popular" },
-  { id: "artcraft_10000", total: 10000, priceUsd: 100 },
+// 1 ETB = 1 Credit. Larger packs include bonus credits. Mirrors the backend
+// ETB pack config in
+// crates/service/plugins/billing_artcraft/src/configs/credits_packs/.
+export const ETB_CREDIT_PACKS: EtbCreditPack[] = [
+  { id: "etb_100", credits: 100, priceEtb: 100 },
+  { id: "etb_300", credits: 320, priceEtb: 300, bonus: 20 },
+  { id: "etb_500", credits: 560, priceEtb: 500, bonus: 60, badge: "Popular" },
+  {
+    id: "etb_1000",
+    credits: 1200,
+    priceEtb: 1000,
+    bonus: 200,
+    badge: "Best Value",
+  },
 ];
 
 interface CreditsModalProps {
@@ -27,16 +37,14 @@ interface CreditsModalProps {
 export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
-  const handlePurchase = async (pack: CreditPack) => {
+  const handlePurchase = async (pack: EtbCreditPack) => {
     setPurchasingId(pack.id);
     try {
       const api = new BillingApi();
-      const response = await api.CreditsPackCheckout({
-        creditsPack: pack.id,
-      });
+      const response = await api.ChapaCheckout({ creditsPackId: pack.id });
 
-      if (response.success && response.data?.stripeCheckoutRedirectUrl) {
-        window.location.href = response.data.stripeCheckoutRedirectUrl;
+      if (response.success && response.data?.chapaCheckoutUrl) {
+        window.location.href = response.data.chapaCheckoutUrl;
       } else {
         toast.error(response.errorMessage ?? "Failed to start checkout");
       }
@@ -65,11 +73,11 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
             Buy <span className="text-primary">credits</span>
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-white/55">
-            One-time credit packs. No subscription required.
+            1 ETB = 1 Credit • Telebirr, CBE Birr &amp; Cards supported.
           </p>
 
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {CREDIT_PACKS.map((pack) => {
+            {ETB_CREDIT_PACKS.map((pack) => {
               const isLoading = purchasingId === pack.id;
               const isPopular = !!pack.badge;
               return (
@@ -97,15 +105,21 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
                     </span>
                     <div className="min-w-0">
                       <div className="text-4xl font-bold leading-none tracking-tight text-white">
-                        {pack.total.toLocaleString()}
+                        {pack.credits.toLocaleString()}
                       </div>
                       <div className="mt-0 text-sm text-white/40">credits</div>
                     </div>
                   </div>
 
+                  {pack.bonus ? (
+                    <span className="-mt-4 text-xs font-medium text-primary">
+                      +{pack.bonus.toLocaleString()} bonus credits included
+                    </span>
+                  ) : null}
+
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-semibold text-white/80">
-                      ${pack.priceUsd}
+                      {pack.priceEtb.toLocaleString()} ETB
                     </span>
                     <span className="flex items-center gap-1.5 text-base font-semibold text-white">
                       {isLoading ? (
@@ -124,7 +138,7 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
           </div>
 
           <p className="mt-6 text-center text-xs text-white/35">
-            Secure checkout via Stripe.
+            One-time purchase. Credit packs never expire.
           </p>
         </div>
       </div>

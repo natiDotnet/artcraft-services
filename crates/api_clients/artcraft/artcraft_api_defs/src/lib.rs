@@ -1,5 +1,6 @@
 pub mod analytics;
 pub mod api_keys;
+pub mod chapa_artcraft;
 pub mod characters;
 pub mod common;
 pub mod craft_apps;

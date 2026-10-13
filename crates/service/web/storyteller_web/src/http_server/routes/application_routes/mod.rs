@@ -18,6 +18,7 @@ mod omni_api_routes;
 mod omni_gen_routes;
 mod prompts_routes;
 mod stripe_artcraft_routes;
+mod chapa_artcraft_routes;
 mod subscription_routes;
 mod tag_routes;
 mod user_bookmarks_routes;

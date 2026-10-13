@@ -5,8 +5,10 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct VerifyResponse {
   pub data: Option<VerifyData>,
-  pub message: String,
-  pub status: String,
+  #[serde(default)]
+  pub message: Option<serde_json::Value>,
+  #[serde(default)]
+  pub status: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

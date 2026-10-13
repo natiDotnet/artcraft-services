@@ -63,6 +63,8 @@ pub async fn complete_credits_pack_purchase(
     maybe_user_token: Some(owner_user_token),
     event_type: PaymentEventType::CreditPackPurchase,
     amount_usd_cents,
+    // Stripe rail: no ETB amount.
+    maybe_amount_etb_cents: None,
     // NULL rather than a clamped/garbage value if it somehow doesn't fit u32.
     maybe_credits_granted: u32::try_from(credits_purchased).ok(),
     maybe_user_subscription_token: None,

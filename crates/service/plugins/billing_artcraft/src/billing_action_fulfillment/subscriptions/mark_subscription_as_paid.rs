@@ -105,6 +105,8 @@ pub async fn mark_subscription_as_paid(
     maybe_user_token: Some(&details.owner_user_token),
     event_type: details.payment_event_type,
     amount_usd_cents: details.amount_usd_cents,
+    // Stripe rail: no ETB amount.
+    maybe_amount_etb_cents: None,
     // NULL rather than a clamped/garbage value if it somehow doesn't fit u32.
     maybe_credits_granted: u32::try_from(monthly_credits).ok(),
     maybe_user_subscription_token: None,

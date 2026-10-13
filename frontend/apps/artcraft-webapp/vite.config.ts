@@ -1,5 +1,5 @@
 /// <reference types='vitest' />
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
@@ -69,52 +69,65 @@ function cdnProxyPlugin() {
   };
 }
 
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/artcraft-webapp',
-  server:{
-    port: 4201,
-    host: 'localhost',
-    proxy: {
-      // Forward API calls to production API to avoid CORS during local dev
-      '/v1': {
-        target: 'https://api.storyteller.ai',
-        changeOrigin: true,
-        secure: true,
-        headers: {
-          Origin: 'https://api.storyteller.ai',
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, __dirname, '');
+  const useLocalApi =
+    env.VITE_USE_LOCAL_API === 'true' ||
+    env.VITE_USE_LOCAL_API === '1' ||
+    process.env.VITE_USE_LOCAL_API === 'true' ||
+    process.env.VITE_USE_LOCAL_API === '1';
+
+  const apiTarget = useLocalApi
+    ? 'http://localhost:12345'
+    : 'https://api.storyteller.ai';
+
+  return {
+    root: __dirname,
+    cacheDir: '../../node_modules/.vite/apps/artcraft-webapp',
+    server: {
+      port: 4201,
+      host: 'localhost',
+      proxy: {
+        // Forward API calls to local storyteller-web or production API to avoid CORS during local dev
+        '/v1': {
+          target: apiTarget,
+          changeOrigin: true,
+          secure: !useLocalApi,
+          ...(useLocalApi
+            ? {}
+            : {
+                headers: {
+                  Origin: 'https://api.storyteller.ai',
+                },
+              }),
         },
+        // NB: `/__cdn` asset proxying lives in `cdnProxyPlugin` above — it
+        // needs per-request host routing, which `server.proxy` can't do.
       },
-      // NB: `/__cdn` asset proxying lives in `cdnProxyPlugin` above — it
-      // needs per-request host routing, which `server.proxy` can't do.
     },
-  },
-  preview:{
-    port: 4301,
-    host: 'localhost',
-  },
-  plugins: [cdnProxyPlugin(), nxViteTsPaths(), react(), wasm(), topLevelAwait()],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  build: {
-    outDir: './dist',
-    emptyOutDir: true,
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
+    preview: {
+      port: 4301,
+      host: 'localhost',
     },
-  },
-  test: {
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: './test-output/vitest/coverage',
-      provider: 'v8' as const,
-    }
-  },
-}));
+    plugins: [cdnProxyPlugin(), nxViteTsPaths(), react(), wasm(), topLevelAwait()],
+    build: {
+      outDir: './dist',
+      emptyOutDir: true,
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
+    },
+    test: {
+      watch: false,
+      globals: true,
+      environment: 'jsdom',
+      include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      reporters: ['default'],
+      coverage: {
+        reportsDirectory: './test-output/vitest/coverage',
+        provider: 'v8' as const,
+      }
+    },
+  };
+});

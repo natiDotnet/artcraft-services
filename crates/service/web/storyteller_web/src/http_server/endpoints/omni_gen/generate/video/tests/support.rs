@@ -26,6 +26,7 @@ use artcraft_api_defs::omni_gen::cost_and_generate_requests::omni_gen_video_cost
 use artcraft_api_keys::ArtcraftApiKey;
 use artcraft_api_defs::omni_gen::generate_response::omni_gen_video_generate_response::OmniGenVideoGenerateResponse;
 use billing_artcraft_component::utils::artcraft_stripe_config::ArtcraftStripeConfig;
+use billing_artcraft_component::utils::artcraft_chapa_config::ArtcraftChapaConfig;
 use billing_component::stripe::stripe_config::{
   FullUrlOrPath, StripeCheckoutConfigs, StripeConfig, StripeCustomerPortalConfigs, StripeSecrets,
 };
@@ -627,6 +628,13 @@ pub(crate) fn build_test_server_state(pool: MySqlPool, media_cdn_override_url: S
         checkout_success_url: "http://localhost/success".to_string(),
         checkout_cancel_url: "http://localhost/cancel".to_string(),
         portal_return_url: "http://localhost/portal".to_string(),
+      }
+      .to_config_with_client(),
+      chapa_artcraft: ArtcraftChapaConfig {
+        secret_key: "CHASECK-test_dummy".to_string(),
+        api_base_url: "https://api.chapa.co/v1".to_string(),
+        checkout_return_url: "http://localhost/etb/return".to_string(),
+        maybe_checkout_callback_url: None,
       }
       .to_config_with_client(),
       elasticsearch: Elasticsearch::new(

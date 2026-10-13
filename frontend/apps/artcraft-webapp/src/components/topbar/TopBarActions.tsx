@@ -299,7 +299,7 @@ function CreditsChip({
       triggerIcon={<CoinsIcon className="text-primary text-[11px]" />}
       triggerLabel={
         <span className="whitespace-nowrap text-sm font-medium">
-          {credits.toLocaleString()}
+          {credits.toLocaleString()} ETB
         </span>
       }
       buttonClassName="h-8 px-3 ps-2.5 bg-transparent hover:bg-white/10 border border-white/15 hover:border-white/30 shadow-none text-white/80 rounded-[3px] gap-1.5"
@@ -309,7 +309,8 @@ function CreditsChip({
         <div className="w-72 max-w-[calc(100vw-24px)] p-3 text-white">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-white/70">
-              Your credit balance
+              Balance: {credits.toLocaleString()} Credits (
+              {credits.toLocaleString()} ETB)
             </span>
             <button
               className="text-sm font-medium text-primary hover:text-primary-300 transition-colors"

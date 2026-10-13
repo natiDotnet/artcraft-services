@@ -29,8 +29,15 @@ where
   pub event_type: PaymentEventType,
 
   /// Signed USD cents: positive for purchases, negative for refunds/chargebacks,
-  /// zero for non-revenue events (e.g. annual monthly refills).
+  /// zero for non-revenue events (e.g. annual monthly refills). Chapa (ETB)
+  /// rows pass 0 here and record their amount in
+  /// [`Self::maybe_amount_etb_cents`] instead.
   pub amount_usd_cents: i64,
+
+  /// Signed ETB cents for Chapa (Telebirr/CBE Birr) rows: positive for
+  /// purchases, negative for refunds. `None` for Stripe (USD) rows — the two
+  /// currencies never share a column.
+  pub maybe_amount_etb_cents: Option<i64>,
 
   /// Credits this payment granted, if any (matches the wallet credit).
   pub maybe_credits_granted: Option<u32>,
@@ -93,6 +100,7 @@ SET
   maybe_user_token = ?,
   event_type = ?,
   amount_usd_cents = ?,
+  amount_etb_cents = ?,
   maybe_credits_granted = ?,
   maybe_user_subscription_token = ?,
   maybe_wallet_ledger_entry_token = ?,
@@ -112,6 +120,7 @@ ON DUPLICATE KEY UPDATE token = token
     args.maybe_user_token.map(|t| t.as_str()),
     args.event_type.to_str(),
     args.amount_usd_cents,
+    args.maybe_amount_etb_cents,
     args.maybe_credits_granted,
     args.maybe_user_subscription_token.map(|t| t.as_str()),
     args.maybe_wallet_ledger_entry_token.map(|t| t.as_str()),

@@ -1179,6 +1179,7 @@ dependencies = [
  "mockall",
  "mysql_queries",
  "once_cell",
+ "reqwest 0.12.23",
  "reusable_types",
  "serde",
  "serde_derive",

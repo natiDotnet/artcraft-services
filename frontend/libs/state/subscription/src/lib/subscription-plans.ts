@@ -1,5 +1,10 @@
 import { SubscriptionPlanDetails } from "./subscription-plan-details.js";
 
+// NB: Prices are in Ethiopian Birr (ETB) and MUST mirror the Chapa rail config
+// in crates/service/plugins/billing_artcraft/src/configs/subscriptions/
+// etb_artcraft_subscription_info_list.rs -- that is what Chapa actually
+// charges. Entitlements mirror the legacy USD plans.
+
 export const FREE_PLAN: SubscriptionPlanDetails = {
   slug: "free",
   name: "Free",
@@ -21,10 +26,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanDetails[] = [
     slug: "artcraft_basic",
     name: "Basic",
     isPaidPlan: true,
-    monthlyPrice: 8,
-    yearlyPrice: 96,
-    originalMonthlyPrice: 10,
-    originalYearlyPrice: 120,
+    monthlyPrice: 1500,
+    yearlyPrice: 15000,
     features: [
       { text: "1,000 credits / month", included: true },
       { text: "~250 Nano Banana images", included: true },
@@ -41,10 +44,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanDetails[] = [
     slug: "artcraft_pro",
     name: "Pro",
     isPaidPlan: true,
-    monthlyPrice: 28,
-    yearlyPrice: 336,
-    originalMonthlyPrice: 35,
-    originalYearlyPrice: 420,
+    monthlyPrice: 5000,
+    yearlyPrice: 50000,
     features: [
       { text: "3,750 credits / month", included: true },
       { text: "~938 Nano Banana images", included: true },
@@ -61,10 +62,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanDetails[] = [
     slug: "artcraft_max",
     name: "Max",
     isPaidPlan: true,
-    monthlyPrice: 48,
-    yearlyPrice: 576,
-    originalMonthlyPrice: 60,
-    originalYearlyPrice: 720,
+    monthlyPrice: 8500,
+    yearlyPrice: 85000,
     features: [
       { text: "6,600 credits / month", included: true },
       { text: "~1,650 Nano Banana images", included: true },

@@ -48,6 +48,7 @@ import { SignupCtaModal } from "../components/signup-cta-modal";
 import { InsufficientCreditsModal } from "../components/insufficient-credits-modal";
 import { GlobalActionReminder } from "../components/global-action-reminder";
 import { useSession } from "../lib/session";
+import { useChapaReturnVerify } from "../lib/chapa-return";
 import { DesktopLogin } from "../pages/login/desktop-login";
 
 function ScrollToTop() {
@@ -140,6 +141,10 @@ export function App() {
   // so global actions like Ctrl+B keep working over open modals). Features
   // register their behavior via useGlobalAction — see @storyteller/keybinds.
   useGlobalKeybinds();
+
+  // Chapa (ETB) checkout returns land anywhere in the SPA with
+  // ?tx_ref=...&status=...; verify + fulfill server-side on arrival.
+  useChapaReturnVerify();
 
   return (
     <>

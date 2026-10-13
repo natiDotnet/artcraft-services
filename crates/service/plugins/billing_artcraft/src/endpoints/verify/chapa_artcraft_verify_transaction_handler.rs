@@ -69,16 +69,23 @@ pub async fn chapa_artcraft_verify_transaction_handler(
 
   // ── Verify with Chapa (server-to-server) ────────────────────────────────
 
-  let url = format!("{}/v1/transaction/verify/{}", config.api_base_url, request.tx_ref);
+  let base = config.api_base_url.trim_end_matches('/');
+  let url = if base.ends_with("/v1") {
+    format!("{}/transaction/verify/{}", base, request.tx_ref)
+  } else {
+    format!("{}/v1/transaction/verify/{}", base, request.tx_ref)
+  };
   let response = config.client.get(&url).await;
+  let status_code = response.status();
+  let text = response.text().await.map_err(|e| {
+    error!("Chapa verify failed to read response body: {:?}", e);
+    CommonWebError::ServerError
+  })?;
 
-  let body: VerifyResponse = response
-      .json()
-      .await
-      .map_err(|e| {
-        error!("Chapa verify failed to parse response: {:?}", e);
-        CommonWebError::ServerError
-      })?;
+  let body: VerifyResponse = serde_json::from_str(&text).map_err(|e| {
+    error!("Chapa verify failed to parse response (status {}): {:?}. Raw body: {}", status_code, e, text);
+    CommonWebError::ServerError
+  })?;
 
   // Chapa's verify response has TWO status fields:
   //  - envelope `status`: did the API call itself succeed
@@ -86,13 +93,14 @@ pub async fn chapa_artcraft_verify_transaction_handler(
   // A pending transaction, for instance, still returns envelope status
   // "success" with `data.status == "pending"`. Check both.
 
-  if body.status != "success" {
+  let status_str = body.status.as_deref().unwrap_or("failed");
+  if status_str != "success" {
     info!("Chapa verify: API-level failure for tx_ref {} (status {})",
-          request.tx_ref, body.status);
+          request.tx_ref, status_str);
     return Ok(Json(ChapaArtcraftVerifyTransactionResponse {
       success: false,
-      chapa_status: body.status.to_lowercase(),
-      message: Some(body.message),
+      chapa_status: status_str.to_lowercase(),
+      message: body.message.map(|m| m.to_string()),
     }));
   }
 
@@ -111,7 +119,7 @@ pub async fn chapa_artcraft_verify_transaction_handler(
     return Ok(Json(ChapaArtcraftVerifyTransactionResponse {
       success: false,
       chapa_status: verify_data.status.to_lowercase(),
-      message: Some(body.message),
+      message: body.message.map(|m| m.to_string()),
     }));
   }
 

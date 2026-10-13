@@ -8,8 +8,9 @@ use utoipa::ToSchema;
 
 /// Used in the `user_spend_events` table in a `VARCHAR(16)` field.
 ///
-/// Where a spend event came from. USD/Stripe only for the foreseeable future;
-/// `manual` covers staff/console adjustments (which carry a NULL source_object_id).
+/// Where a spend event came from. USD/Stripe is the primary rail; `chapa`
+/// covers the Ethiopian rail (Telebirr/CBE Birr settled via Chapa); `manual`
+/// covers staff/console adjustments (which carry a NULL source_object_id).
 ///
 /// DO NOT CHANGE VALUES WITHOUT A MIGRATION STRATEGY.
 #[cfg_attr(test, derive(EnumIter, EnumCount))]
@@ -19,6 +20,10 @@ pub enum PaymentSource {
   /// Stripe (the source for essentially all rows).
   #[serde(rename = "stripe")]
   Stripe,
+
+  /// Chapa (ETB rail: Telebirr, CBE Birr, et al).
+  #[serde(rename = "chapa")]
+  Chapa,
 
   /// Manual staff / console adjustment (no provider object).
   #[serde(rename = "manual")]
@@ -34,6 +39,7 @@ impl PaymentSource {
   pub fn to_str(&self) -> &'static str {
     match self {
       Self::Stripe => "stripe",
+      Self::Chapa => "chapa",
       Self::Manual => "manual",
     }
   }
@@ -41,6 +47,7 @@ impl PaymentSource {
   pub fn from_str(value: &str) -> Result<Self, String> {
     match value {
       "stripe" => Ok(Self::Stripe),
+      "chapa" => Ok(Self::Chapa),
       "manual" => Ok(Self::Manual),
       _ => Err(format!("invalid value: {:?}", value)),
     }
@@ -51,6 +58,7 @@ impl PaymentSource {
     // NB: BTreeSet::from() isn't const, but not worth using LazyStatic, etc.
     BTreeSet::from([
       Self::Stripe,
+      Self::Chapa,
       Self::Manual,
     ])
   }
@@ -67,6 +75,7 @@ mod tests {
     #[test]
     fn test_serialization() {
       assert_serialization(PaymentSource::Stripe, "stripe");
+      assert_serialization(PaymentSource::Chapa, "chapa");
       assert_serialization(PaymentSource::Manual, "manual");
     }
   }
@@ -77,12 +86,14 @@ mod tests {
     #[test]
     fn to_str() {
       assert_eq!(PaymentSource::Stripe.to_str(), "stripe");
+      assert_eq!(PaymentSource::Chapa.to_str(), "chapa");
       assert_eq!(PaymentSource::Manual.to_str(), "manual");
     }
 
     #[test]
     fn from_str() {
       assert_eq!(PaymentSource::from_str("stripe").unwrap(), PaymentSource::Stripe);
+      assert_eq!(PaymentSource::from_str("chapa").unwrap(), PaymentSource::Chapa);
       assert_eq!(PaymentSource::from_str("manual").unwrap(), PaymentSource::Manual);
       assert!(PaymentSource::from_str("foo").is_err());
     }
@@ -94,9 +105,10 @@ mod tests {
     #[test]
     fn all_variants() {
       let mut variants = PaymentSource::all_variants();
-      assert_eq!(variants.len(), 2);
-      assert_eq!(variants.pop_first(), Some(PaymentSource::Stripe));
+      assert_eq!(variants.len(), 3);
+      assert_eq!(variants.pop_first(), Some(PaymentSource::Chapa));
       assert_eq!(variants.pop_first(), Some(PaymentSource::Manual));
+      assert_eq!(variants.pop_first(), Some(PaymentSource::Stripe));
       assert_eq!(variants.pop_first(), None);
     }
   }

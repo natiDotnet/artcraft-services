@@ -42,7 +42,7 @@ const ENTERPRISE_FEATURES = [
 ];
 const TRUST_POINTS = [
   "Cancel anytime",
-  "Secure checkout via Stripe",
+  "Telebirr, CBE Birr & cards via Chapa",
   "Credits refunded if a generation fails",
   "Open source — yours forever",
 ];
@@ -101,7 +101,7 @@ export function WebsitePricingTable({
           </p>
         </div>
         <p className="pricing-hud hidden text-white/40 sm:block">
-          {displayName ? `Signed in as ${displayName}` : "Prices in USD"}
+          {displayName ? `Signed in as ${displayName}` : "Prices in ETB (Birr)"}
         </p>
       </div>
 
@@ -224,19 +224,19 @@ function PlanCell({
 
         <div className="mt-5 flex items-baseline gap-2">
           <span className="font-mono text-base text-[#f05951]/80 line-through">
-            ${basePrice}
+            {basePrice.toLocaleString()} ETB
           </span>
           <span className="font-display text-5xl font-medium tracking-[-0.03em] text-white">
-            ${current}
+            {current.toLocaleString()}
           </span>
-          <span className="text-white/55">/mo</span>
+          <span className="text-white/55">ETB/mo</span>
         </div>
         <p className="pricing-hud mt-2 text-white/40">
           {cadence === "yearly" ? (
             <>
-              ${plan.yearlyPrice} billed yearly ·{" "}
+              {plan.yearlyPrice.toLocaleString()} ETB billed yearly ·{" "}
               <span className="text-[var(--plan-ink)]">
-                Save ${yearlySavings}
+                Save {yearlySavings.toLocaleString()} ETB
               </span>
             </>
           ) : (

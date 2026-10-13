@@ -23,6 +23,7 @@ use actix_artcraft::sessions::user_sessions::http_user_session_manager::HttpUser
 use actix_helpers::middleware::banned_cidr_filter::banned_cidr_set::BannedCidrSet;
 use actix_helpers::middleware::banned_ip_filter::ip_ban_list::ip_ban_list::IpBanList;
 use billing_artcraft_component::utils::artcraft_stripe_config::ArtcraftStripeConfigWithClient;
+use billing_artcraft_component::utils::artcraft_chapa_config::ArtcraftChapaConfigWithClient;
 use billing_component::stripe::stripe_config::StripeConfig;
 use chrono::{DateTime, Utc};
 use cloud_storage::legacy_bucket_client::LegacyBucketClient;
@@ -52,6 +53,7 @@ pub struct ServerState {
 
   pub stripe: StripeSettings,
   pub stripe_artcraft: ArtcraftStripeConfigWithClient,
+  pub chapa_artcraft: ArtcraftChapaConfigWithClient,
 
   pub hostname: String,
 

@@ -36,6 +36,7 @@ use crate::startup::setup_bans::{
 use crate::startup::setup_inference_providers::setup_inference_providers;
 use crate::startup::setup_internal_api_keys::setup_internal_api_keys;
 use crate::startup::setup_dashboards::setup_dashboards;
+use crate::startup::setup_chapa_artcraft::setup_chapa_artcraft;
 use crate::startup::setup_seedance_video_bucket::setup_seedance_video_bucket;
 use crate::startup::setup_static_feature_flags::setup_static_feature_flags;
 use crate::startup::setup_stripe_artcraft::setup_stripe_artcraft;
@@ -213,6 +214,7 @@ pub async fn setup_dependencies(server_hostname: &str) -> AnyhowResult<SetupResu
     },
     stripe: setup_stripe_fakeyou()?,
     stripe_artcraft: setup_stripe_artcraft()?,
+    chapa_artcraft: setup_chapa_artcraft()?,
     hostname: server_hostname.to_string(),
     startup_time,
     server_environment,

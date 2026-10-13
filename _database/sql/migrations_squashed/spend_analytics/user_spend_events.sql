@@ -5,12 +5,14 @@
 -- NB: This is a manually squashed view of all the CREATE and ALTER statements,
 -- with comments attached to the fields for centralized documentation.
 
--- Append-only ledger of real money movements (USD cents), one row per settled
--- event. Derived from settled Stripe webhooks (invoice.paid, payment_intent.
--- succeeded / checkout.session.completed, charge.refunded, charge.dispute.*),
+-- Append-only ledger of real money movements, one row per settled event. Rows
+-- come from settled Stripe webhooks (invoice.paid, payment_intent.succeeded /
+-- checkout.session.completed, charge.refunded, charge.dispute.*) in USD cents,
+-- or from settled Chapa (ETB rail: Telebirr/CBE Birr) webhooks in ETB cents.
 -- NOT from every webhook. Idempotent via uq_source_object so retries never
--- double-count. We always work in USD via Stripe, so there are no currency or
--- fee columns.
+-- double-count. The two currencies never mix: Stripe rows use
+-- amount_usd_cents (amount_etb_cents NULL), Chapa rows use amount_etb_cents
+-- (amount_usd_cents NULL).
 CREATE TABLE user_spend_events (
   -- Replication only.
   id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -41,8 +43,14 @@ CREATE TABLE user_spend_events (
   -- ========== MONEY ==========
 
   -- USD cents. SIGNED: refunds/chargebacks negative; refills are 0. BIGINT so
-  -- downstream lifetime sums never overflow.
+  -- downstream lifetime sums never overflow. 0 for Chapa (ETB) rows -- the ETB
+  -- amount lives in amount_etb_cents.
   amount_usd_cents BIGINT NOT NULL,
+
+  -- ETB cents for Chapa (Telebirr/CBE Birr) rows. SIGNED: refunds negative.
+  -- BIGINT so downstream lifetime sums never overflow. NULL for Stripe rows --
+  -- the two currencies never share a column.
+  amount_etb_cents BIGINT DEFAULT NULL,
 
   -- For credit-pack purchases / subscription grants/refills: how many of OUR
   -- credits this granted. Lets us correlate dollars-in vs credits-granted vs
@@ -60,8 +68,9 @@ CREATE TABLE user_spend_events (
 
   -- ========== SOURCE / PROVIDER ==========
 
-  -- PaymentSource enum: 'stripe' or 'manual'. (USD/Stripe only for the
-  -- foreseeable future; 'manual' covers staff/console adjustments.)
+  -- PaymentSource enum: 'stripe', 'chapa', or 'manual'. ('chapa' covers the
+  -- Ethiopian rail -- Telebirr/CBE Birr settled via Chapa; 'manual' covers
+  -- staff/console adjustments.)
   payment_source VARCHAR(16) NOT NULL,
 
   -- The authoritative object this row represents -- the dedup anchor. NULLABLE.

@@ -451,6 +451,8 @@ async fn upsert_event(write_pool: &Pool<MySql>, dry_run: bool, input: UpsertInpu
     maybe_user_token: Some(input.user),
     event_type: input.event_type,
     amount_usd_cents: input.amount_usd_cents,
+    // Backfilled rows are all Stripe: no ETB amount.
+    maybe_amount_etb_cents: None,
     maybe_credits_granted: input.ledger.and_then(|l| u32::try_from(l.credits_delta).ok()),
     maybe_user_subscription_token: None,
     maybe_wallet_ledger_entry_token: input.ledger.map(|l| &l.ledger_token),

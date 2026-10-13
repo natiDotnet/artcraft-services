@@ -6,7 +6,11 @@ import { BillingApi, UsersApi } from "@storyteller/api";
 import { PricingTable, PROMO_PCT } from "@storyteller/ui-pricing-table";
 import "@storyteller/ui-pricing-table/styles.css";
 import Seo from "../../components/seo";
-import { CreditsModal } from "../../components/credits-modal";
+import { CreditsModal, ETB_CREDIT_PACKS } from "../../components/credits-modal";
+
+// Consumption schedule: a fast image costs 1 credit, a 5-second AI video
+// costs 20 credits (1 ETB = 1 Credit).
+const CREDITS_PER_5_SEC_VIDEO = 20;
 
 const Pricing = () => {
   const [searchParams] = useSearchParams();
@@ -159,7 +163,8 @@ const Pricing = () => {
                 One-time credit packs
               </h2>
               <p className="mt-2 max-w-md leading-relaxed text-white/55">
-                Top up without changing your plan. Credit packs never expire.
+                Top up in Ethiopian Birr — 1 ETB = 1 Credit. Credit packs never
+                expire.
               </p>
               {isLoggedIn ? (
                 <Button
@@ -178,6 +183,36 @@ const Pricing = () => {
                   Sign in to buy credits
                 </Link>
               )}
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                {ETB_CREDIT_PACKS.map((pack) => (
+                  <div key={pack.id} className="border border-white/15 p-5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="font-display text-xl font-semibold text-white">
+                        {pack.priceEtb.toLocaleString()} ETB
+                      </span>
+                      {pack.badge && (
+                        <span className="pricing-hud text-primary">
+                          {pack.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm text-white/70">
+                      {pack.credits.toLocaleString()} credits
+                      {pack.bonus ? (
+                        <span className="text-white/40">
+                          {" "}
+                          · +{pack.bonus.toLocaleString()} bonus
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="mt-1 text-xs text-white/40">
+                      {pack.credits.toLocaleString()} fast images or{" "}
+                      {Math.floor(pack.credits / CREDITS_PER_5_SEC_VIDEO)} AI
+                      videos
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="border-t border-white/15 p-6 md:border-l md:border-t-0 md:p-10">
               <p className="pricing-hud text-white/40">† Footnote</p>

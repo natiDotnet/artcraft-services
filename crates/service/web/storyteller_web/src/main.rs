@@ -250,6 +250,7 @@ pub async fn serve(
     // NB: app_data being clone()'d below should all be safe (dependencies included)
     let app = App::new()
       .app_data(web::Data::new(server_state_arc.stripe_artcraft.clone()))
+      .app_data(web::Data::new(server_state_arc.chapa_artcraft.clone()))
       .app_data(web::Data::new(server_state_arc.firehose_publisher.clone()))
       .app_data(web::Data::new(server_state_arc.mysql_pool.clone()))
       .app_data(web::Data::new(server_state_arc.redis_pool.clone()))

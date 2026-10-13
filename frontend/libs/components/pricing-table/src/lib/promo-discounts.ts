@@ -6,9 +6,9 @@ import { SubscriptionPlanDetails } from "@storyteller/subscription";
 export const PROMO_PCT = 20;
 
 export interface PlanPricing {
-  /** Displayed price (per month) for the active cadence — a whole dollar amount. */
+  /** Displayed price (per month) for the active cadence — a whole-ETB amount. */
   current: number;
-  /** Crossed-out "before" price the discount is applied to — a whole dollar amount. */
+  /** Crossed-out "before" price the discount is applied to — a whole-ETB amount. */
   basePrice: number;
   /** Discount of `current` vs `basePrice` — always PROMO_PCT. */
   discountPct: number;

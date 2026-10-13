@@ -9,12 +9,6 @@ import { twMerge } from "tailwind-merge";
 import { useState, useEffect, useRef } from "react";
 import { TabSelector } from "@storyteller/ui-tab-selector";
 import { UsersApi, BillingApi, UserInfo } from "@storyteller/api";
-import {
-  getLandingUrl,
-  getReferralCode,
-  getReferralUsername,
-  getReferrer,
-} from "@storyteller/common";
 import { useNavigate } from "react-router-dom";
 import { PROMO_PCT, planPricing } from "./promo-discounts";
 
@@ -217,66 +211,29 @@ const PricingTable = ({
       const cadence = isYearly ? "yearly" : "monthly";
       const apiPlanSlug = PLAN_SLUG_MAP[planSlug] || planSlug;
 
-      // Not logged in - use user_signup_subscription_checkout
+      // Not logged in - Chapa checkout requires an existing user account
       if (!user) {
-        const billingApi = new BillingApi();
-        const response = await billingApi.UserSignupSubscriptionCheckout({
-          plan: apiPlanSlug,
-          cadence: cadence,
-          maybeReferralUrl: getReferrer(),
-          maybeLandingUrl: getLandingUrl(),
-          maybeReferralUsername: getReferralUsername(),
-          maybeReferralCode: getReferralCode(),
-        });
-
-        if (!response.success || !response.data) {
-          throw new Error(
-            response.errorMessage || "Failed to initiate checkout",
-          );
-        }
-
-        // Redirect to Stripe
-        window.location.href = response.data.stripeCheckoutRedirectUrl;
+        navigate("/login?from=%2Fpricing");
         return;
       }
 
-      // Logged in - user already has an account
-      // We use the normal subscription APIs here, not the signup one
-      const hasActiveSub = activePlanSlug && activePlanSlug !== "free";
+      // Logged in - buy (or extend) a prepaid ETB period via Chapa. Chapa
+      // cannot auto-recur, so each successful payment fulfills as a prepaid
+      // period of the chosen plan (see the Chapa verify endpoint).
       const billingApi = new BillingApi();
+      const response = await billingApi.ChapaCheckout({
+        plan: apiPlanSlug,
+        period: cadence,
+      });
 
-      if (hasActiveSub) {
-        // User has active subscription - switch plan via portal
-        const response = await billingApi.SwitchPlan({
-          plan: apiPlanSlug,
-          cadence: cadence,
-        });
-
-        if (!response.success || !response.data) {
-          throw new Error(
-            response.errorMessage || "Failed to initiate plan switch",
-          );
-        }
-
-        // Redirect to Stripe Portal
-        window.location.href = response.data.stripePortalUrl;
-      } else {
-        // User logged in but no active subscription - use normal subscription checkout
-        // This attaches the subscription to the existing account
-        const response = await billingApi.SubscriptionCheckout({
-          plan: apiPlanSlug,
-          cadence: cadence,
-        });
-
-        if (!response.success || !response.data) {
-          throw new Error(
-            response.errorMessage || "Failed to initiate checkout",
-          );
-        }
-
-        // Redirect to Stripe Checkout
-        window.location.href = response.data.stripeCheckoutRedirectUrl;
+      if (!response.success || !response.data) {
+        throw new Error(
+          response.errorMessage || "Failed to initiate checkout",
+        );
       }
+
+      // Redirect to Chapa's hosted payment page
+      window.location.href = response.data.chapaCheckoutUrl;
     } catch (error) {
       console.error("Error initiating checkout:", error);
     } finally {
@@ -422,11 +379,13 @@ const PricingTable = ({
               <div className="mb-1 flex items-baseline gap-2">
                 {originalPrice !== null && (
                   <span className="text-[#f05951]/80 line-through text-lg md:text-xl decoration-[#f05951]/80">
-                    ${originalPrice}
+                    {originalPrice.toLocaleString()} ETB
                   </span>
                 )}
-                <span className="text-3xl md:text-4xl font-bold">${price}</span>
-                <span className="text-white/60">/month</span>
+                <span className="text-3xl md:text-4xl font-bold">
+                  {price.toLocaleString()}
+                </span>
+                <span className="text-white/60">ETB/month</span>
               </div>
               <div className="text-xs text-white/40 mb-4 md:mb-6 uppercase tracking-wider font-semibold min-h-[1rem]">
                 {plan.monthlyPrice === 0

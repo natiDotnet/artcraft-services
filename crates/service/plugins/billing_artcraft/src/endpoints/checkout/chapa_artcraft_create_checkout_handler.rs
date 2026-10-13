@@ -56,7 +56,7 @@ pub async fn chapa_artcraft_create_checkout_handler(
     get_etb_credits_pack_by_id(pack_id)
         .ok_or_else(|| CommonWebError::BadInputWithSimpleMessage(format!("unknown credits pack: {}", pack_id)))?;
     ChapaTxRefPayload::CreditsPack {
-      user_token,
+      user_token: user_token.clone(),
       pack_id: pack_id.clone(),
     }
   } else {
@@ -68,7 +68,7 @@ pub async fn chapa_artcraft_create_checkout_handler(
       ChapaPlanBillingPeriod::Yearly => EtbSubscriptionBillingPeriod::Yearly,
     };
     ChapaTxRefPayload::Subscription {
-      user_token,
+      user_token: user_token.clone(),
       slug: plan,
       period,
     }
@@ -93,48 +93,75 @@ pub async fn chapa_artcraft_create_checkout_handler(
   // Chapa expects amount as a decimal string with exactly two decimal places.
   let amount_str = format!("{:.2}", amount_etb as f64);
 
-  // ── Call Chapa /v1/charge/initialize ─────────────────────────────────────
+  // ── Call Chapa /v1/transaction/initialize ────────────────────────────────
+
+  let (first_name, last_name) = match &user_metadata.username {
+    Some(username) => {
+      let mut parts = username.split_whitespace();
+      let first = parts.next().unwrap_or("Customer").to_string();
+      let last = parts.next().unwrap_or("User").to_string();
+      (first, last)
+    }
+    None => ("Customer".to_string(), "User".to_string()),
+  };
+
+  let email = user_metadata.user_email.clone()
+      .unwrap_or_else(|| format!("{}@user.artcraft.ai", user_token));
 
   let initialize_request = InitializeRequest {
     amount: amount_str,
     currency: "ETB".to_string(),
     tx_ref: tx_ref.clone(),
-    callback_url: config.checkout_return_url.clone(),
-    return_url: config.maybe_checkout_callback_url.clone(),
-    email: user_metadata.user_email.clone(),
-    first_name: None,
-    last_name: None,
+    return_url: config.checkout_return_url.clone(),
+    callback_url: config.maybe_checkout_callback_url.clone(),
+    email,
+    first_name,
+    last_name,
     phone_number: None,
     title: Some("Artcraft Payment".to_string()),
     description: Some(description),
     meta: None,
   };
 
-  let url = format!("{}/v1/charge/initialize", config.api_base_url);
+  let base = config.api_base_url.trim_end_matches('/');
+  let url = if base.ends_with("/v1") {
+    format!("{}/transaction/initialize", base)
+  } else {
+    format!("{}/v1/transaction/initialize", base)
+  };
+
   let response = config.client.post_json(&url, &initialize_request).await;
+  let status_code = response.status();
+  let text = response.text().await.map_err(|e| {
+    error!("Chapa initialize failed to read response body: {:?}", e);
+    CommonWebError::ServerError
+  })?;
 
-  let body: InitializeResponse = response
-      .json()
-      .await
-      .map_err(|e| {
-        error!("Chapa initialize failed to parse response: {:?}", e);
-        CommonWebError::ServerError
-      })?;
+  let body: InitializeResponse = serde_json::from_str(&text).map_err(|e| {
+    error!("Chapa initialize failed to parse response (status {}): {:?}. Raw body: {}", status_code, e, text);
+    CommonWebError::ServerError
+  })?;
 
-  if body.status != "success" {
-    error!("Chapa initialize error: {:?}", body.message);
+  if body.status.as_deref() != Some("success") {
+    let msg = body.message
+        .map(|m| m.to_string())
+        .unwrap_or_else(|| format!("HTTP status {}", status_code));
+    error!("Chapa initialize error: {}", msg);
     return Err(CommonWebError::BadInputWithSimpleMessage(format!(
-      "Chapa error: {}", body.message
+      "Chapa error: {}", msg
     )));
   }
 
-  let data = body.data.ok_or(CommonWebError::ServerError)?;
+  let data = body.data.ok_or_else(|| {
+    error!("Chapa initialize response missing data: {}", text);
+    CommonWebError::ServerError
+  })?;
 
-  // Sanity check: Chapa echoes our tx_ref back; if it doesn't match, the
-  // verification step will not be able to decode it.
-  if data.reference != tx_ref {
-    error!("Chapa returned a different reference than requested: {} != {}", data.reference, tx_ref);
-    return Err(CommonWebError::ServerError);
+  if let Some(ref ref_echo) = data.reference {
+    if ref_echo != &tx_ref {
+      error!("Chapa returned a different reference than requested: {} != {}", ref_echo, tx_ref);
+      return Err(CommonWebError::ServerError);
+    }
   }
 
   info!("Created Chapa checkout: tx_ref={}, checkout_url={}", tx_ref, data.checkout_url);
