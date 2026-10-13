@@ -34,17 +34,40 @@ export const SignupForm = ({
 }: SignupFormProps) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /** Normalize phone suffix (digits typed after the +251 prefix) to local Ethiopian format. */
+  const normalizePhone = (suffix: string): string => {
+    // Strip any non-digit characters the user may have typed
+    const digits = suffix.replace(/\D/g, "");
+    // Suffix after +251: 9XXXXXXXX (9 digits) -> local 09XXXXXXXX
+    if (digits.startsWith("9") && digits.length === 9) {
+      return "0" + digits;
+    }
+    // Already local-prefixed (user typed 09...)
+    if (digits.startsWith("09") && digits.length === 10) {
+      return digits;
+    }
+    // Fallback: return as-is stripped
+    return digits;
+  };
+
   const handleSignup = async () => {
     setError(null);
 
-    if (!email || !password) {
+    if (!email || !phone || !password) {
       setError("All fields are required");
+      return;
+    }
+
+    const normalizedPhone = normalizePhone(phone);
+    if (normalizedPhone.length < 10 || normalizedPhone.length > 10) {
+      setError("Please enter a valid 9-digit phone number after +251");
       return;
     }
 
@@ -57,12 +80,9 @@ export const SignupForm = ({
 
     const api = new UsersApi();
 
-    // Generate a username from the email
-    const emailPrefix = email.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
-    // Ensure we don't exceed max length (7 chars from email + 3 digits = 10 total)
-    const truncatedPrefix = emailPrefix.substring(0, 7);
-    const randomSuffix = Math.floor(Math.random() * 900) + 100; // 100-999
-    const generatedUsername = `${truncatedPrefix}${randomSuffix}`;
+    // Use the normalized phone number as the unique username for lookup-by-phone login.
+    // Max 16 chars — local Ethiopian format is 10 digits, well within limit.
+    const generatedUsername = normalizedPhone;
 
     const response = await api.Signup({
       username: generatedUsername,
@@ -133,6 +153,30 @@ export const SignupForm = ({
               autoFocus={autoFocus}
               inputClassName={AUTH_INPUT_CLASSES}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className={AUTH_LABEL_CLASSES} htmlFor="phone-suffix-input">
+              Phone Number <span className="text-red-500">*</span>
+            </label>
+            {/* Prefix-masked phone input: displays fixed +251 badge fused to the left */}
+            <div
+              className="flex h-10 w-full overflow-hidden rounded-lg border border-black/15 bg-black/[0.03] transition-colors focus-within:border-primary dark:border-white/15 dark:bg-white/5 dark:focus-within:border-white/40"
+            >
+              <span className="flex shrink-0 select-none items-center border-r border-black/15 px-3 text-sm font-medium text-black/50 dark:border-white/15 dark:text-white/50">
+                +251
+              </span>
+              <input
+                id="phone-suffix-input"
+                type="tel"
+                inputMode="numeric"
+                maxLength={9}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                placeholder="9XXXXXXXX"
+                className="h-full flex-1 bg-transparent px-3 text-sm font-normal text-base-fg outline-none placeholder:text-black/35 dark:text-white dark:placeholder:text-white/25"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

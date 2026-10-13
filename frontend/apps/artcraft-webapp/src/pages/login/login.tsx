@@ -28,13 +28,34 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Normalize phone numbers so they match the stored username (normalized Ethiopian format).
+   * Email addresses pass through unchanged.
+   */
+  const normalizeIdentifier = (raw: string): string => {
+    const trimmed = raw.trim();
+    // Email — leave as-is
+    if (trimmed.includes("@")) return trimmed;
+    // Strip all non-digit characters (+, spaces, dashes)
+    let digits = trimmed.replace(/\D/g, "");
+    // +251XXXXXXXXX  ->  09XXXXXXXXX (12 digits international -> 10 digit local)
+    if (digits.startsWith("251") && digits.length === 12) {
+      digits = "0" + digits.slice(3);
+    }
+    // Bare 9-digit suffix (e.g. 911223344) typed without the +251 prefix -> 09XXXXXXXXX
+    if (digits.startsWith("9") && digits.length === 9) {
+      digits = "0" + digits;
+    }
+    return digits;
+  };
+
   const handleLogin = async () => {
     setError(null);
     setIsLoading(true);
 
     const api = new UsersApi();
     const response = await api.Login({
-      usernameOrEmail: email,
+      usernameOrEmail: normalizeIdentifier(email),
       password: password,
     });
 
@@ -95,13 +116,13 @@ const Login = () => {
         >
           <div className="space-y-2">
             <label className={AUTH_LABEL_CLASSES}>
-              Email or Username
+              Email or Phone
             </label>
             <Input
               type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com or username"
+              placeholder="you@example.com or 09..."
               inputClassName={AUTH_INPUT_CLASSES}
             />
           </div>

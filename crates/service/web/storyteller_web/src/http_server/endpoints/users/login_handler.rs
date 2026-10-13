@@ -119,6 +119,35 @@ pub async fn login_handler(
     lookup_user_for_login_by_username(&check_username_or_email, &mysql_pool).await
   };
 
+  // If no user found and the identifier looks like a phone number, retry with the
+  // alternate Ethiopian phone format:
+  //   international (251XXXXXXXXX, 12 digits) <-> local (09XXXXXXXXX, 10 digits)
+  let maybe_user = match maybe_user {
+    Ok(None) => {
+      let digits_only: String = check_username_or_email.chars().filter(|c| c.is_ascii_digit()).collect();
+      let alt_phone: Option<String> = if digits_only == check_username_or_email {
+        if digits_only.len() == 12 && digits_only.starts_with("251") {
+          // international -> local
+          Some(format!("0{}", &digits_only[3..]))
+        } else if digits_only.len() == 10 && digits_only.starts_with('0') {
+          // local -> international
+          Some(format!("251{}", &digits_only[1..]))
+        } else {
+          None
+        }
+      } else {
+        None
+      };
+
+      if let Some(alt) = alt_phone {
+        lookup_user_for_login_by_username(&alt, &mysql_pool).await
+      } else {
+        Ok(None)
+      }
+    }
+    other => other,
+  };
+
   let user = match maybe_user {
     Ok(Some(user)) => user,
     Ok(None) => {
