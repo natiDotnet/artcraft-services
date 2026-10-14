@@ -28,6 +28,7 @@ export interface ChatModelDto {
   output_price_per_1m_etb?: number;
   badge?: string;
   description: string;
+  family?: string;
 }
 
 export interface ListChatModelsResponseDto {
@@ -88,13 +89,32 @@ export class ChatApi extends ApiManager {
 
       if (!response.ok) {
         if (response.status === 402) {
-          throw new Error("INSUFFICIENT_CREDITS: Please top up your ETB wallet to continue chatting.");
+          const err = new Error("Not enough credits.");
+          (err as any).status = 402;
+          throw err;
         }
         if (response.status === 401) {
-          throw new Error("UNAUTHORIZED: Please log in to start a chat.");
+          const err = new Error("Please log in to start a chat.");
+          (err as any).status = 401;
+          throw err;
         }
         const text = await response.text();
-        throw new Error(text || `Server error: ${response.status}`);
+        let message = text;
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed && typeof parsed === "object") {
+            if (parsed.message) {
+              message = parsed.message;
+            } else if (parsed.error) {
+              message = parsed.error;
+            }
+          }
+        } catch {
+          // not JSON, keep raw text
+        }
+        const err = new Error(message || `Server error: ${response.status}`);
+        (err as any).status = response.status;
+        throw err;
       }
 
       if (!response.body) {

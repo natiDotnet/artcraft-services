@@ -109,6 +109,63 @@ This document provides a complete technical record of all features, fixes, and a
 
 ---
 
+---
+
+## 7. AI Studio Chat Model Grouping (GPT, Claude, GLM, DeepSeek, Llama, Gemini)
+
+### Requirement
+- Organize the AI Studio Chat model selector into clear, distinct model families (**GPT**, **Claude**, **GLM**, **DeepSeek**, **Llama**, **Gemini**), making model discovery intuitive with flyout submenus instead of an unstructured flat list.
+
+### Implementation Details
+- **Backend Model Catalog (`list_chat_models_handler.rs`):**
+  - Added `pub family: Option<String>` to `ChatModelInfo`.
+  - Expanded catalog to full family models:
+    - **GPT (OpenAI):** `GPT-4o` (780 ETB), `GPT-4o Mini` (38 ETB), `o3-mini` (220 ETB), `o1` (2,900 ETB).
+    - **Claude (Anthropic):** `Claude 3.5 Sonnet` (1,100 ETB), `Claude 3.5 Haiku` (180 ETB), `Claude 3 Opus` (2,800 ETB).
+    - **GLM (Zhipu AI):** `GLM-4 9B` (20 ETB), `GLM-4` (120 ETB).
+    - **DeepSeek (DeepSeek):** `DeepSeek V3` (25 ETB), `DeepSeek R1` (170 ETB).
+    - **Llama (Meta):** `Llama 3.3 70B` (48 ETB), `Llama 3.1 8B` (15 ETB).
+    - **Gemini (Google):** `Gemini 2.0 Flash` (35 ETB), `Gemini 1.5 Pro` (450 ETB).
+- **Frontend Model Catalog Fallback (`chat-store.ts` & `ChatApi.ts`):**
+  - Added `family?: string` to `ChatModelDto`.
+  - Rebuilt `@storyteller/api` type definitions (`npx tsc -b libs/api/tsconfig.lib.json`).
+  - Populated complete default catalog matching the backend.
+- **Frontend Grouped Popover Menu (`studio-chat.tsx`):**
+  - Defined `CHAT_MODEL_FAMILIES` mapping rules with curated icons (`BotIcon`, `SparklesIcon`, `ZapIcon`, `CpuIcon`, `BoxesIcon`, `GemIcon`).
+  - Utilized `@storyteller/ui-popover`'s native `subItems` support to generate structured family group rows.
+  - Hovering or clicking a family row flies out a dedicated submenu displaying each model with ETB pricing, token breakdown, and capability badges.
+  - Selecting any child model selects it, updates `activeModel`, closes the menu, and updates the bottom selector trigger pill to show the active model name and price.
+
+---
+
+## 8. AI Studio Chat Credit Check Prioritization & "Not Enough Credits" Handling
+
+### Problem Identified
+- When a user without sufficient wallet balance attempted to chat, the backend evaluated `openrouter_config.api_key` before verifying the user's wallet balance.
+- Because `OPENROUTER_API_KEY` was unset or empty in local `.env`, the server aborted with HTTP 400 Bad Request (`"OpenRouter API key is not configured on the server. Please set OPENROUTER_API_KEY in .env"`), and the frontend dumped the raw JSON envelope into the assistant message:
+  `⚠️ Could not complete request: {"success":false,"error_code":400,...}`
+- In contrast, image and video generation endpoints check wallet credits **first**, returning HTTP 402 Payment Required (`CommonWebError::PaymentRequired`), which prompts the user with `"Not enough credits."` and opens the Insufficient Credits top-up modal.
+
+### Changes Implemented
+1. **Backend Credit Deduction Prioritization (`chat_completions_handler.rs`):**
+   - Moved `attempt_wallet_deduction_else_common_web_error` to execute **first** immediately following user session validation.
+   - If the user's wallet has 0 credits (or insufficient balance), the backend immediately yields HTTP 402 `Payment Required` (`CommonWebError::PaymentRequired`) before any inference provider validation occurs.
+2. **Frontend Error Parsing (`ChatApi.ts`):**
+   - On HTTP 402, `StreamCompletion` now explicitly throws `new Error("Not enough credits.")` with status `402`.
+   - On any non-200 responses, safely unwraps any JSON error body (e.g. `parsed.message` or `parsed.error`), preventing raw JSON payloads from ever surfacing in the UI.
+3. **Frontend Store Error Handling (`chat-store.ts`):**
+   - In `onError`, detects HTTP 402 / insufficient credit conditions.
+   - When credits are insufficient:
+     - Automatically fires `artcraft:insufficient-credits` event.
+     - Sets the chat assistant bubble text cleanly to `"Not enough credits."` instead of raw error dumps.
+4. **Studio Chat Integration (`studio-chat.tsx`):**
+   - Connected `useInsufficientCredits` hook in `studio-chat.tsx`.
+   - Listens for `artcraft:insufficient-credits`:
+     - Displays `toast.error("Not enough credits.")`.
+     - Opens the `InsufficientCreditsModal` top-up modal so the user can easily purchase credits via Chapa / ETB.
+
+---
+
 ## Summary of Modified Files
 
 | Area | File Path | Key Changes |
@@ -120,8 +177,13 @@ This document provides a complete technical record of all features, fixes, and a
 | **Backend Utils** | `crates/service/web/storyteller_web/src/util/normalize_ethiopian_phone.rs` | New utility for normalizing Ethiopian phone numbers |
 | **Backend Billing** | `crates/service/plugins/billing_artcraft/src/endpoints/checkout/chapa_artcraft_create_checkout_handler.rs` | Session phone extraction & Chapa checkout initialization |
 | **Backend Login** | `crates/service/web/storyteller_web/src/http_server/endpoints/users/login_handler.rs` | Dual format (local/international) phone login lookup |
+| **Backend Chat** | `crates/service/web/storyteller_web/src/http_server/endpoints/chat/list_chat_models_handler.rs` | Added `family` field & expanded GPT, Claude, GLM, DeepSeek, Llama, Gemini models |
+| **Backend Chat** | `crates/service/web/storyteller_web/src/http_server/endpoints/chat/chat_completions_handler.rs` | Prioritized credit deduction before provider check (HTTP 402 on 0 balance) |
 | **Config** | `.env` & `build/selfhost/.env` | Added `GOOGLE_CLIENT_ID` configuration |
 | **Frontend Auth** | `frontend/apps/artcraft-webapp/src/components/auth/GoogleLoginButton.tsx` | +251 Phone prompt modal & credential submission |
 | **Frontend Auth** | `frontend/apps/artcraft-webapp/src/components/auth/signup-form.tsx` | Masked +251 input & phone prop forwarding |
 | **Frontend Auth** | `frontend/apps/artcraft-webapp/src/pages/login/login.tsx` | Phone identifier normalization & Google SSO phone pass |
 | **Frontend API** | `frontend/libs/api/src/lib/UsersApi.ts` | Added `phoneNumber` and `phoneNumberRequired` handling |
+| **Frontend API** | `frontend/libs/api/src/lib/ChatApi.ts` | Added `family` property to `ChatModelDto`, clean 402 error & JSON body unwrapping |
+| **Frontend Store** | `frontend/apps/artcraft-webapp/src/lib/chat-store.ts` | Updated `DEFAULT_CHAT_MODELS`, handles 402 with "Not enough credits." & event |
+| **Frontend UI** | `frontend/apps/artcraft-webapp/src/pages/chat/studio-chat.tsx` | Grouped models by family with submenus, connects `InsufficientCreditsModal` + toast |

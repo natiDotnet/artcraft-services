@@ -58,15 +58,7 @@ pub async fn chat_completions_handler(
     None => return Err(CommonWebError::NotAuthorized),
   };
 
-  // 2. Validate OpenRouter configuration
-  let openrouter_config = &server_state.inference_providers.openrouter;
-  if openrouter_config.api_key.trim().is_empty() || openrouter_config.api_key == "unset" {
-    return Err(CommonWebError::BadInputWithSimpleMessage(
-      "OpenRouter API key is not configured on the server. Please set OPENROUTER_API_KEY in .env".to_string(),
-    ));
-  }
-
-  // 3. Credit deduction (1 ETB = 1 Credit)
+  // 2. Credit deduction (1 ETB = 1 Credit) — checked first so users without credits get 402 Payment Required
   attempt_wallet_deduction_else_common_web_error(
     &user_session.user_token,
     Some("openrouter_chat"),
@@ -79,6 +71,14 @@ pub async fn chat_completions_handler(
     "Deducted 1 credit for chat turn from user: {}",
     user_session.user_token.as_str()
   );
+
+  // 3. Validate OpenRouter configuration
+  let openrouter_config = &server_state.inference_providers.openrouter;
+  if openrouter_config.api_key.trim().is_empty() || openrouter_config.api_key == "unset" {
+    return Err(CommonWebError::BadInputWithSimpleMessage(
+      "OpenRouter API key is not configured on the server. Please set OPENROUTER_API_KEY in .env".to_string(),
+    ));
+  }
 
   // 4. Prepare OpenRouter client & request
   let model = payload

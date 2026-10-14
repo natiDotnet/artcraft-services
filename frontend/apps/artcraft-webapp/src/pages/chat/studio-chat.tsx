@@ -8,6 +8,11 @@ import {
   ChevronDownIcon,
   SquareIcon,
   LoaderCircleIcon,
+  BotIcon,
+  ZapIcon,
+  CpuIcon,
+  BoxesIcon,
+  GemIcon,
 } from "lucide-react";
 import {
   CreateMediaPageShell,
@@ -15,6 +20,7 @@ import {
   usePromptHeight,
 } from "../../components/generation-gallery";
 import { useSignupCta, SignupCtaModal } from "../../components/signup-cta-modal";
+import { useInsufficientCredits } from "../../components/insufficient-credits-modal";
 import { PromptBox } from "../../components/prompt-box/PromptBox";
 import type { RefImage } from "../../components/prompt-box/types";
 import { PopoverMenu, type PopoverItem } from "@storyteller/ui-popover";
@@ -25,7 +31,86 @@ import {
   ChatMessageItem,
   DEFAULT_CHAT_MODELS,
 } from "../../lib/chat-store";
+import type { ChatModelDto } from "@storyteller/api";
 import { toast } from "../../components/toast/toast";
+
+interface ChatModelFamilyDef {
+  id: string;
+  name: string;
+  provider: string;
+  icon: React.ReactNode;
+  matches: (m: ChatModelDto) => boolean;
+}
+
+const CHAT_MODEL_FAMILIES: ChatModelFamilyDef[] = [
+  {
+    id: "gpt",
+    name: "GPT",
+    provider: "OpenAI",
+    icon: <BotIcon className="h-4 w-4 text-emerald-400" />,
+    matches: (m) =>
+      m.family?.toLowerCase() === "gpt" ||
+      m.id.startsWith("openai/") ||
+      /^(gpt|o1|o3)/i.test(m.name) ||
+      m.provider.toLowerCase().includes("openai"),
+  },
+  {
+    id: "claude",
+    name: "Claude",
+    provider: "Anthropic",
+    icon: <SparklesIcon className="h-4 w-4 text-amber-400" />,
+    matches: (m) =>
+      m.family?.toLowerCase() === "claude" ||
+      m.id.startsWith("anthropic/") ||
+      /claude/i.test(m.name) ||
+      m.provider.toLowerCase().includes("anthropic"),
+  },
+  {
+    id: "glm",
+    name: "GLM",
+    provider: "Zhipu AI",
+    icon: <ZapIcon className="h-4 w-4 text-cyan-400" />,
+    matches: (m) =>
+      m.family?.toLowerCase() === "glm" ||
+      m.id.startsWith("thudm/") ||
+      m.id.startsWith("zhipu/") ||
+      /glm/i.test(m.name) ||
+      m.provider.toLowerCase().includes("zhipu"),
+  },
+  {
+    id: "deepseek",
+    name: "DeepSeek",
+    provider: "DeepSeek",
+    icon: <CpuIcon className="h-4 w-4 text-blue-400" />,
+    matches: (m) =>
+      m.family?.toLowerCase() === "deepseek" ||
+      m.id.startsWith("deepseek/") ||
+      /deepseek/i.test(m.name) ||
+      m.provider.toLowerCase().includes("deepseek"),
+  },
+  {
+    id: "llama",
+    name: "Llama",
+    provider: "Meta",
+    icon: <BoxesIcon className="h-4 w-4 text-indigo-400" />,
+    matches: (m) =>
+      m.family?.toLowerCase() === "llama" ||
+      m.id.startsWith("meta-llama/") ||
+      /llama/i.test(m.name) ||
+      m.provider.toLowerCase().includes("meta"),
+  },
+  {
+    id: "gemini",
+    name: "Gemini",
+    provider: "Google",
+    icon: <GemIcon className="h-4 w-4 text-rose-400" />,
+    matches: (m) =>
+      m.family?.toLowerCase() === "gemini" ||
+      m.id.startsWith("google/") ||
+      /gemini/i.test(m.name) ||
+      m.provider.toLowerCase().includes("google"),
+  },
+];
 
 const EMPTY_REFS: RefImage[] = [];
 const NOOP_REFS = () => {};
@@ -223,10 +308,29 @@ function renderFormattedMarkdown(text: string) {
 export default function StudioChat() {
   const { authChecked } = useAuthCheck();
   const { loggedIn, openSignupCta } = useSignupCta();
+  const openInsufficientCredits = useInsufficientCredits();
   const { promptBoxRef, promptHeight } = usePromptHeight();
 
   const [inputPrompt, setInputPrompt] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Listen for insufficient credits event dispatched by chat-store
+  useEffect(() => {
+    const onInsufficientCredits = () => {
+      openInsufficientCredits();
+      toast.error("Not enough credits.");
+    };
+    window.addEventListener(
+      "artcraft:insufficient-credits",
+      onInsufficientCredits
+    );
+    return () => {
+      window.removeEventListener(
+        "artcraft:insufficient-credits",
+        onInsufficientCredits
+      );
+    };
+  }, [openInsufficientCredits]);
 
   // Chat store state & actions
   const sessions = useChatStore((s) => s.sessions);
@@ -274,29 +378,105 @@ export default function StudioChat() {
     }
   }, [isStreaming, messages[messages.length - 1]?.content]);
 
-  // Model Popover items formatted for PopoverMenu
+  // Model Popover items grouped by family (GPT, Claude, GLM, DeepSeek, Llama, Gemini)
   const modelPopoverItems = useMemo((): PopoverItem[] => {
-    return modelsList.map((model) => {
-      const isSelected = model.id === activeModel;
-      const price = model.price_per_1m_tokens_etb || 25;
-      return {
-        label: model.name,
-        selected: isSelected,
-        action: model.id,
-        description: `${price} ETB / 1M tokens (${
-          model.input_price_per_1m_etb || 18
-        } in / ${model.output_price_per_1m_etb || 35} out) • ${
-          model.description
-        }`,
-        icon: <SparklesIcon className="h-4 w-4 text-primary" />,
-        badges: model.badge ? [{ label: model.badge }] : undefined,
+    const assignedIds = new Set<string>();
+    const groupedItems: PopoverItem[] = [];
+
+    for (const family of CHAT_MODEL_FAMILIES) {
+      const familyModels = modelsList.filter((m) => {
+        if (assignedIds.has(m.id)) return false;
+        if (family.matches(m)) {
+          assignedIds.add(m.id);
+          return true;
+        }
+        return false;
+      });
+
+      if (familyModels.length === 0) continue;
+
+      const subItems: PopoverItem[] = familyModels.map((model) => {
+        const isSelected = model.id === activeModel;
+        const price = model.price_per_1m_tokens_etb || 25;
+        return {
+          label: model.name,
+          selected: isSelected,
+          action: model.id,
+          description: `${price} ETB / 1M tokens (${
+            model.input_price_per_1m_etb || 18
+          } in / ${model.output_price_per_1m_etb || 35} out) • ${
+            model.description
+          }`,
+          icon: <SparklesIcon className="h-4 w-4 text-primary" />,
+          badges: model.badge ? [{ label: model.badge }] : undefined,
+          trailing: (
+            <span className="font-mono text-xs font-semibold text-amber-300">
+              {price} ETB
+            </span>
+          ),
+        };
+      });
+
+      const hasSelectedChild = subItems.some((s) => s.selected);
+      const selectedChildModel = familyModels.find((m) => m.id === activeModel);
+
+      groupedItems.push({
+        label: family.name,
+        selected: hasSelectedChild,
+        icon: family.icon,
+        description: hasSelectedChild && selectedChildModel
+          ? `${selectedChildModel.name} • ${selectedChildModel.price_per_1m_tokens_etb || 25} ETB / 1M`
+          : `${family.provider} • ${familyModels.length} ${familyModels.length === 1 ? "model" : "models"}`,
         trailing: (
-          <span className="font-mono text-xs font-semibold text-amber-300">
-            {price} ETB
+          <span className="text-[11px] font-mono text-base-fg/50">
+            {familyModels.length} {familyModels.length === 1 ? "model" : "models"}
           </span>
         ),
-      };
-    });
+        subItems,
+      });
+    }
+
+    // Include any remaining models under "Other"
+    const remainingModels = modelsList.filter((m) => !assignedIds.has(m.id));
+    if (remainingModels.length > 0) {
+      const otherSubItems: PopoverItem[] = remainingModels.map((model) => {
+        const isSelected = model.id === activeModel;
+        const price = model.price_per_1m_tokens_etb || 25;
+        return {
+          label: model.name,
+          selected: isSelected,
+          action: model.id,
+          description: `${price} ETB / 1M • ${model.description}`,
+          icon: <SparklesIcon className="h-4 w-4 text-primary" />,
+          badges: model.badge ? [{ label: model.badge }] : undefined,
+          trailing: (
+            <span className="font-mono text-xs font-semibold text-amber-300">
+              {price} ETB
+            </span>
+          ),
+        };
+      });
+
+      const hasSelectedChild = otherSubItems.some((s) => s.selected);
+      const selectedChildModel = remainingModels.find((m) => m.id === activeModel);
+
+      groupedItems.push({
+        label: "Other",
+        selected: hasSelectedChild,
+        icon: <SparklesIcon className="h-4 w-4 text-primary" />,
+        description: hasSelectedChild && selectedChildModel
+          ? `${selectedChildModel.name} • ${selectedChildModel.price_per_1m_tokens_etb || 25} ETB`
+          : `${remainingModels.length} models`,
+        trailing: (
+          <span className="text-[11px] font-mono text-base-fg/50">
+            {remainingModels.length} {remainingModels.length === 1 ? "model" : "models"}
+          </span>
+        ),
+        subItems: otherSubItems,
+      });
+    }
+
+    return groupedItems;
   }, [modelsList, activeModel]);
 
   // Session Popover items
@@ -327,9 +507,20 @@ export default function StudioChat() {
     try {
       await sendMessage(promptToSend);
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to send message";
-      toast.error(message);
+      const isCreditsErr =
+        (err as any)?.status === 402 ||
+        (err instanceof Error &&
+          (err.message.toLowerCase().includes("not enough credits") ||
+            err.message.includes("402")));
+
+      if (isCreditsErr) {
+        openInsufficientCredits();
+        toast.error("Not enough credits.");
+      } else {
+        const message =
+          err instanceof Error ? err.message : "Failed to send message";
+        toast.error(message);
+      }
     }
   };
 
@@ -511,17 +702,17 @@ export default function StudioChat() {
                   items={modelPopoverItems}
                   onSelect={handleModelChange}
                   mode="toggle"
-                  panelTitle="Select Chat Model"
-                  panelClassName="w-[340px]"
+                  panelTitle="AI Models (by Family)"
+                  panelClassName="w-[320px]"
                   richList
                   triggerIcon={
                     <SparklesIcon className="h-4 w-4 text-primary" />
                   }
-                  renderTrigger={(selected) => (
+                  renderTrigger={() => (
                     <>
                       <SparklesIcon className="h-4 w-4 text-primary shrink-0" />
-                      <span className="truncate max-w-[120px] font-medium text-xs text-base-fg">
-                        {selected?.label || activeModelInfo.name}
+                      <span className="truncate max-w-[130px] font-medium text-xs text-base-fg">
+                        {activeModelInfo ? activeModelInfo.name : "Select Model"}
                       </span>
                       <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-mono text-amber-300 shrink-0">
                         {activeModelInfo.price_per_1m_tokens_etb || 25} ETB / 1M

@@ -44,10 +44,12 @@ interface ChatState {
 }
 
 export const DEFAULT_CHAT_MODELS: ChatModelDto[] = [
+  // --- DeepSeek Family ---
   {
     id: "deepseek/deepseek-chat",
     name: "DeepSeek V3",
     provider: "DeepSeek",
+    family: "DeepSeek",
     cost_credits: 1,
     price_per_1m_tokens_etb: 25.0,
     input_price_per_1m_etb: 18.0,
@@ -59,6 +61,7 @@ export const DEFAULT_CHAT_MODELS: ChatModelDto[] = [
     id: "deepseek/deepseek-r1",
     name: "DeepSeek R1",
     provider: "DeepSeek",
+    family: "DeepSeek",
     cost_credits: 1,
     price_per_1m_tokens_etb: 170.0,
     input_price_per_1m_etb: 70.0,
@@ -66,21 +69,13 @@ export const DEFAULT_CHAT_MODELS: ChatModelDto[] = [
     badge: "Reasoning",
     description: "Advanced chain-of-thought analysis and problem solving (170 ETB / 1M tokens)",
   },
-  {
-    id: "anthropic/claude-3.5-sonnet",
-    name: "Claude 3.5 Sonnet",
-    provider: "Anthropic",
-    cost_credits: 1,
-    price_per_1m_tokens_etb: 1100.0,
-    input_price_per_1m_etb: 375.0,
-    output_price_per_1m_etb: 1875.0,
-    badge: "Best Quality",
-    description: "Benchmark-leading nuance, writing, and composition (1,100 ETB / 1M tokens)",
-  },
+
+  // --- GPT (OpenAI) Family ---
   {
     id: "openai/gpt-4o",
     name: "GPT-4o",
     provider: "OpenAI",
+    family: "GPT",
     cost_credits: 1,
     price_per_1m_tokens_etb: 780.0,
     input_price_per_1m_etb: 310.0,
@@ -89,15 +84,156 @@ export const DEFAULT_CHAT_MODELS: ChatModelDto[] = [
     description: "Flagship intelligence for reasoning, analysis, and dialogue (780 ETB / 1M tokens)",
   },
   {
+    id: "openai/gpt-4o-mini",
+    name: "GPT-4o Mini",
+    provider: "OpenAI",
+    family: "GPT",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 38.0,
+    input_price_per_1m_etb: 19.0,
+    output_price_per_1m_etb: 75.0,
+    badge: "Fast & Cheap",
+    description: "Affordable and fast for everyday queries and tasks (38 ETB / 1M tokens)",
+  },
+  {
+    id: "openai/o3-mini",
+    name: "o3-mini",
+    provider: "OpenAI",
+    family: "GPT",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 220.0,
+    input_price_per_1m_etb: 140.0,
+    output_price_per_1m_etb: 550.0,
+    badge: "Reasoning",
+    description: "High-intelligence STEM, coding, and math reasoning (220 ETB / 1M tokens)",
+  },
+  {
+    id: "openai/o1",
+    name: "o1",
+    provider: "OpenAI",
+    family: "GPT",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 2900.0,
+    input_price_per_1m_etb: 1875.0,
+    output_price_per_1m_etb: 7500.0,
+    badge: "Deep Reasoning",
+    description: "OpenAI's most capable model for complex thinking and architecture (2,900 ETB / 1M tokens)",
+  },
+
+  // --- Claude (Anthropic) Family ---
+  {
+    id: "anthropic/claude-3.5-sonnet",
+    name: "Claude 3.5 Sonnet",
+    provider: "Anthropic",
+    family: "Claude",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 1100.0,
+    input_price_per_1m_etb: 375.0,
+    output_price_per_1m_etb: 1875.0,
+    badge: "Best Quality",
+    description: "Benchmark-leading nuance, writing, and composition (1,100 ETB / 1M tokens)",
+  },
+  {
+    id: "anthropic/claude-3.5-haiku",
+    name: "Claude 3.5 Haiku",
+    provider: "Anthropic",
+    family: "Claude",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 180.0,
+    input_price_per_1m_etb: 100.0,
+    output_price_per_1m_etb: 625.0,
+    badge: "Fast",
+    description: "High speed, low latency with exceptional intelligence (180 ETB / 1M tokens)",
+  },
+  {
+    id: "anthropic/claude-3-opus",
+    name: "Claude 3 Opus",
+    provider: "Anthropic",
+    family: "Claude",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 2800.0,
+    input_price_per_1m_etb: 1875.0,
+    output_price_per_1m_etb: 9375.0,
+    badge: "Complex Tasks",
+    description: "Deep research, detailed writing, and complex comprehension (2,800 ETB / 1M tokens)",
+  },
+
+  // --- GLM (THUDM / Zhipu AI) Family ---
+  {
+    id: "thudm/glm-4-9b-chat",
+    name: "GLM-4 9B",
+    provider: "Zhipu AI",
+    family: "GLM",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 20.0,
+    input_price_per_1m_etb: 12.0,
+    output_price_per_1m_etb: 25.0,
+    badge: "Fast & Open",
+    description: "Bilingual conversation with high speed and economical cost (20 ETB / 1M tokens)",
+  },
+  {
+    id: "zhipu/glm-4",
+    name: "GLM-4",
+    provider: "Zhipu AI",
+    family: "GLM",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 120.0,
+    input_price_per_1m_etb: 75.0,
+    output_price_per_1m_etb: 165.0,
+    badge: "Flagship",
+    description: "Zhipu flagship model for advanced reasoning and multi-turn dialogue (120 ETB / 1M tokens)",
+  },
+
+  // --- Llama (Meta) Family ---
+  {
     id: "meta-llama/llama-3.3-70b-instruct",
     name: "Llama 3.3 70B",
     provider: "Meta",
+    family: "Llama",
     cost_credits: 1,
     price_per_1m_tokens_etb: 48.0,
     input_price_per_1m_etb: 45.0,
     output_price_per_1m_etb: 50.0,
     badge: "Open Weights",
     description: "High-performance open-source conversational intelligence (48 ETB / 1M tokens)",
+  },
+  {
+    id: "meta-llama/llama-3.1-8b-instruct",
+    name: "Llama 3.1 8B",
+    provider: "Meta",
+    family: "Llama",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 15.0,
+    input_price_per_1m_etb: 10.0,
+    output_price_per_1m_etb: 20.0,
+    badge: "Lightweight",
+    description: "Ultra-fast lightweight open-source conversational model (15 ETB / 1M tokens)",
+  },
+
+  // --- Gemini (Google) Family ---
+  {
+    id: "google/gemini-2.0-flash-001",
+    name: "Gemini 2.0 Flash",
+    provider: "Google",
+    family: "Gemini",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 35.0,
+    input_price_per_1m_etb: 20.0,
+    output_price_per_1m_etb: 50.0,
+    badge: "Next-Gen",
+    description: "Next-generation model built for high speed and multimodal reasoning (35 ETB / 1M tokens)",
+  },
+  {
+    id: "google/gemini-pro-1.5",
+    name: "Gemini 1.5 Pro",
+    provider: "Google",
+    family: "Gemini",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 450.0,
+    input_price_per_1m_etb: 160.0,
+    output_price_per_1m_etb: 625.0,
+    badge: "Long Context",
+    description: "High reasoning power with up to 2 million token context window (450 ETB / 1M tokens)",
   },
 ];
 
@@ -365,13 +501,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
               abortController: null,
               error: err.message,
             });
+
+            const isCreditsErr =
+              (err as any)?.status === 402 ||
+              err.message.toLowerCase().includes("not enough credits") ||
+              err.message.includes("INSUFFICIENT_CREDITS") ||
+              err.message.includes("Payment Required") ||
+              err.message.includes("402");
+
+            if (isCreditsErr) {
+              window.dispatchEvent(new CustomEvent("artcraft:insufficient-credits"));
+            }
+
             const currentMessages = get().getActiveMessages();
             const asst = currentMessages.find((m) => m.id === assistantMsgId);
             updateAssistantMsg({
               streaming: false,
               content:
                 asst?.content ||
-                `⚠️ Could not complete request: ${err.message}`,
+                (isCreditsErr
+                  ? "Not enough credits."
+                  : `⚠️ ${err.message}`),
             });
           },
         },
@@ -383,6 +533,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         abortController: null,
         error: err.message,
       });
+      const isCreditsErr =
+        err?.status === 402 ||
+        (err?.message &&
+          (err.message.toLowerCase().includes("not enough credits") ||
+            err.message.includes("402")));
+      if (isCreditsErr) {
+        window.dispatchEvent(new CustomEvent("artcraft:insufficient-credits"));
+      }
     }
   },
 }));
