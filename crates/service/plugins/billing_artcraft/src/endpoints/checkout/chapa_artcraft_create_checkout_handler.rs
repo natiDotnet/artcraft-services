@@ -96,7 +96,14 @@ pub async fn chapa_artcraft_create_checkout_handler(
   // ── Call Chapa /v1/transaction/initialize ────────────────────────────────
 
   // Take the phone number directly from the logged-in user session on the backend
-  let phone_number = resolve_phone_number_from_session(&user_metadata);
+  let phone_number = match resolve_phone_number_from_session(&user_metadata) {
+    Some(phone) => Some(phone),
+    None => {
+      return Err(CommonWebError::BadInputWithSimpleMessage(
+        "Phone number is required for Chapa payment. Please ensure your account has a phone number.".to_string()
+      ));
+    }
+  };
 
   let (first_name, last_name) = resolve_customer_name(
     user_metadata.username.as_deref(),

@@ -11,6 +11,10 @@ use sqlx::pool::PoolConnection;
 use sqlx::MySql;
 use tokens::tokens::users::UserToken;
 
+use mysql_queries::queries::users::user::update::update_username::{update_username, UpdateUsernameArgs, UpdateUsernameError};
+use crate::util::normalize_ethiopian_phone::normalize_ethiopian_phone;
+use http_server_common::request::get_request_ip::get_request_ip;
+
 pub struct NewSsoArgs<'a> {
   pub http_request: &'a HttpRequest,
   pub claims: Claims,
@@ -21,6 +25,7 @@ pub struct NewSsoArgs<'a> {
   pub maybe_landing_url: Option<String>,
   pub maybe_referral_partner: Option<String>,
   pub maybe_referral_user_token: Option<UserToken>,
+  pub maybe_phone_number: Option<String>,
 }
 
 pub struct NewSsoAccountInfo {
@@ -50,7 +55,39 @@ pub async fn handle_new_sso_account(
           })?;
 
   match maybe_user_account {
-    Some(user_account) => {
+    Some(mut user_account) => {
+      let has_phone = normalize_ethiopian_phone(&user_account.username).is_some();
+      if !has_phone {
+        if let Some(ref phone) = args.maybe_phone_number {
+          let normalized = normalize_ethiopian_phone(phone)
+            .ok_or_else(|| CommonWebError::BadInputWithSimpleMessage("Please enter a valid Ethiopian phone number (e.g. 09... or 07...)".to_string()))?;
+          let ip_address = get_request_ip(&args.http_request);
+          let update_res = update_username(UpdateUsernameArgs {
+            token: &user_account.token,
+            username: &normalized,
+            display_name: &normalized,
+            username_is_not_customized: false,
+            ip_address: &ip_address,
+            transactor: Transactor::for_connection(args.mysql_connection),
+          }).await;
+          match update_res {
+            Ok(_) => {
+              user_account.username = normalized.clone();
+              user_account.display_name = normalized;
+            },
+            Err(UpdateUsernameError::UsernameIsTaken) => {
+              return Err(CommonWebError::BadInputWithSimpleMessage("An account with this phone number already exists".to_string()));
+            },
+            Err(err) => {
+              warn!("error updating username to phone: {:?}", err);
+              return Err(CommonWebError::from_anyhow_error(anyhow::anyhow!("database error updating phone")));
+            }
+          }
+        } else {
+          return Err(CommonWebError::BadInputWithSimpleMessage("phone_number_required".to_string()));
+        }
+      }
+
       handle_new_sso_account_for_existing_user(LinkArgs {
         http_request: args.http_request,
         claims: args.claims,
@@ -72,6 +109,7 @@ pub async fn handle_new_sso_account(
         maybe_landing_url: args.maybe_landing_url,
         maybe_referral_partner: args.maybe_referral_partner,
         maybe_referral_user_token: args.maybe_referral_user_token,
+        maybe_phone_number: args.maybe_phone_number,
       }).await
     },
   }

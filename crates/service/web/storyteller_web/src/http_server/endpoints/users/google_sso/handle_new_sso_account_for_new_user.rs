@@ -27,12 +27,24 @@ pub struct CreateArgs<'a> {
   pub maybe_referral_url: Option<String>,
   pub maybe_landing_url: Option<String>,
   pub maybe_referral_user_token: Option<UserToken>,
+  pub maybe_phone_number: Option<String>,
 }
 pub async fn handle_new_sso_account_for_new_user(
   args: CreateArgs<'_>
 )
   -> Result<NewSsoAccountInfo, CommonWebError>
 {
+  let (username, display_name) = match &args.maybe_phone_number {
+    Some(phone) => {
+      let normalized = crate::util::normalize_ethiopian_phone::normalize_ethiopian_phone(phone)
+        .ok_or_else(|| CommonWebError::BadInputWithSimpleMessage("Please enter a valid Ethiopian phone number (e.g. 09... or 07...)".to_string()))?;
+      (normalized.clone(), normalized)
+    },
+    None => {
+      return Err(CommonWebError::BadInputWithSimpleMessage("phone_number_required".to_string()));
+    }
+  };
+
   let mut transaction = args.mysql_connection.begin()
       .await
       .map_err(|e| {
@@ -48,66 +60,40 @@ pub async fn handle_new_sso_account_for_new_user(
 
   let mut maybe_source = get_request_signup_source_enum(&args.http_request);
 
-  let mut maybe_user_token = None;
-  let mut maybe_user_display_name = None;
+  let result = create_account_from_google_sso(
+    CreateAccountFromGoogleSsoArgs {
+      username: &username,
+      display_name: &display_name,
+      email_address: &args.user_email_address,
+      email_gravatar_hash: &user_email_gravatar_hash,
+      email_confirmed_by_google: args.claims.email_verified(),
+      maybe_feature_flags: user_feature_flags.as_deref(),
+      ip_address: &ip_address,
+      maybe_source,
+      maybe_referral_partner: args.maybe_referral_partner.clone(),
+      maybe_referral_url: args.maybe_referral_url.clone(),
+      maybe_landing_url: args.maybe_landing_url.clone(),
+      maybe_referral_user_token: args.maybe_referral_user_token.as_ref(),
+    },
+    &mut *transaction,
+  ).await;
 
-  for _ in 0..5 {
-    // NB: We try a few times to make sure we don't hit a username collision.
-    let display_name = generate_random_username();
-    let username = display_name.trim().to_lowercase();
+  let user_token = match result {
+    Ok(token) => token,
+    Err(CreateAccountError::UsernameIsTaken) => {
+      return Err(CommonWebError::BadInputWithSimpleMessage(
+        "An account with this phone number already exists".to_string(),
+      ));
+    },
+    Err(err) => {
+      warn!("error creating account from google sso: {:?}", err);
+      return Err(CommonWebError::from_anyhow_error(
+        anyhow::anyhow!("error creating account from google sso: {:?}", err),
+      ));
+    },
+  };
 
-    info!("generated username: {}", username);
-
-    let result = create_account_from_google_sso(
-      CreateAccountFromGoogleSsoArgs {
-        username: &username,
-        display_name: &display_name,
-        email_address: &args.user_email_address,
-        email_gravatar_hash: &user_email_gravatar_hash,
-        email_confirmed_by_google: args.claims.email_verified(),
-        maybe_feature_flags: user_feature_flags.as_deref(),
-        ip_address: &ip_address,
-        maybe_source,
-        maybe_referral_partner: args.maybe_referral_partner.clone(),
-        maybe_referral_url: args.maybe_referral_url.clone(),
-        maybe_landing_url: args.maybe_landing_url.clone(),
-        maybe_referral_user_token: args.maybe_referral_user_token.as_ref(),
-      },
-      &mut *transaction,
-    ).await;
-
-    match result {
-      Ok(token) => {
-        maybe_user_token = Some(token);
-        maybe_user_display_name = Some(display_name);
-        break;
-      },
-      Err(CreateAccountError::UsernameIsTaken) => {
-        continue; // NB: We'll try again with a new username.
-      },
-      Err(err) => {
-        warn!("error creating account from google sso: {:?}", err);
-        // CreateAccountError doesn't impl std::error::Error, so fold it into anyhow.
-        return Err(CommonWebError::from_anyhow_error(
-          anyhow::anyhow!("error creating account from google sso: {:?}", err),
-        ));
-      },
-    }
-  }
-
-  let user_token = maybe_user_token.ok_or_else(|| {
-    error!("no username without collision after several tries (token)");
-    CommonWebError::server_error_with_message(
-      "no username without collision after several tries (token)",
-    )
-  })?;
-
-  let user_display_name = maybe_user_display_name.ok_or_else(|| {
-    error!("no username without collision after several tries (display name)");
-    CommonWebError::server_error_with_message(
-      "no username without collision after several tries (display name)",
-    )
-  })?;
+  let user_display_name = display_name;
 
   let _token = insert_google_sign_in_account(InsertGoogleSignInArgs {
     subject: args.claims_subject,

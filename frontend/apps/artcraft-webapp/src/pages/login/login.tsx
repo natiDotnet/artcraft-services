@@ -183,6 +183,7 @@ const Login = () => {
         <div>
           <GoogleLoginButton
             mode="login"
+            phoneNumber={email}
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
           />

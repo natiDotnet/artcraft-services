@@ -283,20 +283,23 @@ export class UsersApi extends ApiManager {
 
   public async GoogleSSO({
     credential,
+    phoneNumber,
     maybeReferralUrl,
     maybeLandingUrl,
     maybeReferralUsername,
     maybeReferralCode,
   }: {
     credential: string;
+    phoneNumber?: string;
     maybeReferralUrl?: string;
     maybeLandingUrl?: string;
     maybeReferralUsername?: string;
     maybeReferralCode?: string;
-  }): Promise<ApiResponse<{ usernameNotYetCustomized?: boolean }>> {
+  }): Promise<ApiResponse<{ usernameNotYetCustomized?: boolean; phoneNumberRequired?: boolean }>> {
     const endpoint = `${this.getApiSchemeAndHost()}/v1/accounts/google_sso`;
     const body: {
       google_credential: string;
+      maybe_phone_number?: string;
       maybe_referral_url?: string;
       maybe_landing_url?: string;
       maybe_referral_username?: string;
@@ -304,6 +307,9 @@ export class UsersApi extends ApiManager {
     } = {
       google_credential: credential,
     };
+    if (phoneNumber) {
+      body.maybe_phone_number = phoneNumber;
+    }
     if (maybeReferralUrl) {
       body.maybe_referral_url = maybeReferralUrl;
     }
@@ -319,18 +325,14 @@ export class UsersApi extends ApiManager {
 
     try {
       const response = await this.authFetch<
-        {
-          google_credential: string;
-          maybe_referral_url?: string;
-          maybe_landing_url?: string;
-          maybe_referral_username?: string;
-          maybe_referral_code?: string;
-        },
+        typeof body,
         {
           success: boolean;
           signed_session?: string;
           username_not_yet_customized?: boolean;
+          phone_number_required?: boolean;
           error_message?: string;
+          message?: string;
         }
       >(endpoint, {
         method: "POST",
@@ -343,12 +345,20 @@ export class UsersApi extends ApiManager {
         storeSignedSession(response.signed_session);
       }
 
+      if (response.phone_number_required || response.message === "phone_number_required") {
+        return {
+          success: false,
+          data: { phoneNumberRequired: true },
+          errorMessage: "phone_number_required",
+        };
+      }
+
       return {
         success: response.success,
         data: response.success
           ? { usernameNotYetCustomized: response.username_not_yet_customized }
           : undefined,
-        errorMessage: response.error_message,
+        errorMessage: response.error_message || response.message,
       };
     } catch (err: any) {
       return {

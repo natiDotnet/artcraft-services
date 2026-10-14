@@ -73,6 +73,9 @@ use utoipa::ToSchema;
   - Should we store canonical emails? --> No, you can create more than one account per gmail.
  */
 
+use mysql_queries::queries::users::user::update::update_username::{update_username, UpdateUsernameArgs, UpdateUsernameError};
+use crate::util::normalize_ethiopian_phone::normalize_ethiopian_phone;
+
 #[derive(ToSchema, Deserialize)]
 pub struct GoogleCreateAccountRequest {
   pub google_credential: String,
@@ -92,6 +95,9 @@ pub struct GoogleCreateAccountRequest {
   /// Optional: A referral code created by another user. If present, takes priority over
   /// `maybe_referral_username` for resolving the referring user.
   pub maybe_referral_code: Option<String>,
+
+  /// Optional: Phone number provided during Google sign-in / sign-up.
+  pub maybe_phone_number: Option<String>,
 }
 
 #[derive(ToSchema, Serialize)]
@@ -172,11 +178,51 @@ pub async fn google_sso_handler(
       })?;
 
   let user_token;
-  let maybe_user_display_name;
+  let mut maybe_user_display_name;
   let username_not_yet_customized;
 
   match maybe_sso_account {
     Some(sso_account) => {
+      let ip_address = get_request_ip(&http_request);
+      let has_phone = sso_account.maybe_username
+        .as_deref()
+        .and_then(normalize_ethiopian_phone)
+        .is_some();
+
+      let mut updated_phone_name = None;
+      if !has_phone {
+        if let Some(ref phone) = request.maybe_phone_number {
+          let normalized = normalize_ethiopian_phone(phone)
+            .ok_or_else(|| CommonWebError::BadInputWithSimpleMessage("Please enter a valid Ethiopian phone number (e.g. 09... or 07...)".to_string()))?;
+
+          if let Some(ref existing_user_token) = sso_account.maybe_user_token {
+            let update_res = update_username(UpdateUsernameArgs {
+              token: existing_user_token,
+              username: &normalized,
+              display_name: &normalized,
+              username_is_not_customized: false,
+              ip_address: &ip_address,
+              transactor: Transactor::for_connection(&mut mysql_connection),
+            }).await;
+
+            match update_res {
+              Ok(_) => {
+                updated_phone_name = Some(normalized);
+              },
+              Err(UpdateUsernameError::UsernameIsTaken) => {
+                return Err(CommonWebError::BadInputWithSimpleMessage("An account with this phone number already exists".to_string()));
+              },
+              Err(err) => {
+                warn!("error updating username to phone for sso user: {:?}", err);
+                return Err(CommonWebError::from_anyhow_error(anyhow::anyhow!("database error updating phone")));
+              }
+            }
+          }
+        } else {
+          return Err(CommonWebError::BadInputWithSimpleMessage("phone_number_required".to_string()));
+        }
+      }
+
       let existing_user_token = handle_existing_sso_account(ExistingAccountArgs {
         http_request: &http_request,
         sso_account: &sso_account,
@@ -186,7 +232,7 @@ pub async fn google_sso_handler(
       }).await?;
 
       user_token = existing_user_token;
-      maybe_user_display_name = sso_account.maybe_user_display_name.clone();
+      maybe_user_display_name = updated_phone_name.or_else(|| sso_account.maybe_user_display_name.clone());
       username_not_yet_customized = false;
     },
     None => {
@@ -216,6 +262,7 @@ pub async fn google_sso_handler(
         maybe_landing_url: maybe_landing_url.clone(),
         maybe_referral_partner: referral_info.maybe_referral_partner,
         maybe_referral_user_token: referral_info.maybe_referral_user_token.clone(),
+        maybe_phone_number: request.maybe_phone_number.clone(),
       }).await?;
 
       // Record the referral relationship if this is a genuinely new account.

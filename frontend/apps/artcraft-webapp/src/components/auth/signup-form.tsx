@@ -231,6 +231,7 @@ export const SignupForm = ({
         <div>
           <GoogleLoginButton
             mode="signup"
+            phoneNumber={phone}
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
           />

@@ -18,3 +18,4 @@ pub mod text_contains_cjk;
 pub mod title_to_url_slug;
 pub mod traits;
 pub mod troll_user_bans;
+pub mod normalize_ethiopian_phone;
