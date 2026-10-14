@@ -1,0 +1,86 @@
+Type,Model Name,Creator / Provider,Billing Unit,USD Price,ETB Price (200 ETB/$),Artcraft Credits,Notes / Specs
+Audio,Suno Sounds,Suno (Audio / Sound Effects & Loops),Flat per generation,0.03,6,3,"Text prompt, BPM control, musical key, loopable toggle"
+Audio,Suno Music,Suno (Audio / Full Songs),Flat per generation,0.08,16,8,"Full vocals, lyrics, instruments, style prompt, instrumental toggle"
+Audio,Suno Remix,Suno (Audio / Track Remixing),Flat per generation,0.08,16,8,"1 Audio reference track, style prompt, keep-lyrics toggle"
+Audio,Suno Sample,Suno (Audio / Song from Sample),Flat per generation,0.08,16,8,"1 Audio sample reference, style tags, instrumental toggle"
+Audio,Seed Audio 1.0,ByteDance (Audio / Sound & Speech Synthesis),Flat per generation,0.21,42,21,"Up to 3 audio refs, 1 image ref, 8kHz-48kHz sample rate, speed/volume/pitch shaping"
+Image,FLUX.1 Schnell,Black Forest Labs / Fal.ai / BFL,Per image (4-step fast),0.003,0.6,1,1024×1024
+Image,FLUX.1 Dev,Black Forest Labs / Fal.ai / BFL,Per image,0.025,5,3,1024×1024
+Image,FLUX 1.1 Pro,Black Forest Labs / Fal.ai / BFL,Per megapixel,0.04,8,4,1024×1024
+Image,FLUX 1.1 Pro Ultra,Black Forest Labs / Fal.ai / BFL,Per image (raw photoreal),0.06,12,6,Up to 2K
+Image,Nano Banana 2 (0.5K),Google / Fal.ai,Per 0.5K image,0.08,16,8,512×512 (0.5K)
+Image,Nano Banana 2 (1K / 2K),Google / Fal.ai,Per 1K / 2K image,0.15,30,15,1024×1024 – 2048×2048
+Image,Nano Banana 2 (4K),Google / Fal.ai,Per 4K image,0.3,60,30,4096×4096 (4K Ultra-Res)
+Image,Nano Banana Pro (1K / 2K),Google / Fal.ai,Per 1K / 2K image,0.15,30,15,1024×1024 – 2048×2048
+Image,Nano Banana Pro (4K),Google / Fal.ai,Per 4K image,0.3,60,30,4096×4096 (4K Ultra-Res)
+Image,Gemini 2.5 Flash Image,Google / Google / Fal.ai,Per image,0.039,7.8,4,1024×1024
+Image,ByteDance Seedream v4,ByteDance / ByteDance / Fal.ai,Per image,0.03,6,3,1024×1024
+Image,ByteDance Seedream v4.5,ByteDance / ByteDance / Fal.ai,Per image,0.035,7,4,1024×1024
+Image,ByteDance Seedream v5 Lite,ByteDance / ByteDance / Fal.ai,Per image,0.04,8,4,1024×1024
+Image,ByteDance Seedream v5.0 Pro,ByteDance / ByteDance / Fal.ai,Per image,0.06,12,6,Up to 2K
+Image,ByteDance Seedream v5.0 Pro Ultra,ByteDance / ByteDance / Fal.ai,Per image,0.09,18,9,Up to 4K
+Image,GPT Image 1 (Low),OpenAI / OpenAI / Fal.ai,Per image (draft),0.02,4,2,512×512
+Image,GPT Image 1 (Medium),OpenAI / OpenAI / Fal.ai,Per square image,0.05,10,5,1024×1024
+Image,GPT Image 1 (High),OpenAI / OpenAI / Fal.ai,Per high-res image,0.2,40,20,1024×1792
+Image,GPT Image 2 (Low),OpenAI / OpenAI / Fal.ai,Per image,0.01,2,1,512×512
+Image,GPT Image 2 (Medium),OpenAI / OpenAI / Fal.ai,Per image,0.05,10,5,1024×1024
+Image,GPT Image 2 (High 1K),OpenAI / OpenAI / Fal.ai,Per 1K image,0.16,32,16,1024×1024
+Image,GPT Image 2 (High 2K),OpenAI / OpenAI / Fal.ai,Per 2K image,0.27,54,27,2048×2048
+Image,GPT Image 2 (High 4K),OpenAI / OpenAI / Fal.ai,Per 4K image,0.42,84,42,4096×4096
+Image,GPT Image 2.5 Flare (Low),OpenAI / OpenAI / Fal.ai,Per image,0.01,2,1,512×512
+Image,GPT Image 2.5 Flare (High 1K),OpenAI / OpenAI / Fal.ai,Per 1K image,0.06,12,6,1024×1024
+Image,GPT Image 2.5 Flare (High 2K),OpenAI / OpenAI / Fal.ai,Per 2K image,0.09,18,9,2048×2048
+Image,GPT Image 2.5 Flare (High 4K),OpenAI / OpenAI / Fal.ai,Per 4K image,0.13,26,13,4096×4096
+Image,GPT Image 2.5 Flare (Max),OpenAI / OpenAI / Fal.ai,Per max image,0.22,44,22,Max Master
+Image,GPT Image 2.5 Sunburst,OpenAI / OpenAI / Fal.ai,Per image tier (1K),0.06,12,6,1024×1024
+Image,Midjourney v7,Midjourney / Kinovi / Midjourney,Per image,0.06,12,6,1024×1024
+Image,Midjourney v7 Niji,Midjourney / Kinovi / Midjourney,Per image (anime),0.06,12,6,1024×1024
+Image,Midjourney v8,Midjourney / Kinovi / Midjourney,Per image,0.08,16,8,1024×1024
+Image,DALL·E 3 (Standard),OpenAI / OpenAI Direct API,Per image,0.04,8,4,1024×1024
+Image,DALL·E 3 (HD),OpenAI / OpenAI Direct API,Per HD image,0.08,16,8,1024×1792
+Image,DALL·E 2,OpenAI / OpenAI Direct API,Per image,0.02,4,2,512×512
+Image,Grok 2 / Aurora Image,xAI / xAI Direct API,Per image,0.03,6,3,1024×1024
+Image,Recraft V3 / Vector,Recraft / Fal.ai,Per vector / SVG image,0.04,8,4,Vector / Raster
+Image,BiRefNet (Background Removal),ZhengPeng7 / Fal.ai,Per background removal,0.001,0.2,1,Any resolution
+Image,SwitchX Studio Relight,Beeble / Beeble API,Per portrait relighting,0.06,12,6,HD Studio
+Image,FLUX.1 Dev (Self-Hosted H100),Black Forest Labs / GMI Cloud GPU,Per GPU compute (~2s),0.0011,0.22,1,1024×1024
+Video,Flux 3 Draft,Black Forest Labs / Fal.ai / BFL,Per second ($0.06/s),0.3,60,30,"5-second video (720p Draft, Audio: No)"
+Video,Flux 3 (720p),Black Forest Labs / Fal.ai / BFL,Per second ($0.17/s),0.85,170,85,"5-second video (720p HD, Audio: No)"
+Video,Flux 3 (1080p),Black Forest Labs / Fal.ai / BFL,Per second ($0.29/s),1.45,290,145,"5-second video (1080p Full HD, Audio: No)"
+Video,Kling 1.6 Pro (Text-to-Video),Kuaishou / Fal.ai / Kuaishou,Per second ($0.098/s),0.49,98,49,"5-second video (1080p, Audio: No)"
+Video,Kling 1.6 Pro (Image-to-Video),Kuaishou / Fal.ai / Kuaishou,Per second ($0.095/s),0.48,95,48,"5-second video (1080p, Audio: No)"
+Video,Kling 2.5 Turbo Pro,Kuaishou / Fal.ai / Kuaishou,Per second ($0.07/s),0.35,70,35,"5-second video (1080p Turbo, Audio: No)"
+Video,Kling 2.6 Pro (Audio Off),Kuaishou / Fal.ai / Kuaishou,Per second ($0.07/s),0.35,70,35,"5-second video (1080p, Audio: No)"
+Video,Kling 2.6 Pro (Audio On),Kuaishou / Fal.ai / Kuaishou,Per second ($0.14/s),0.7,140,70,"5-second video (1080p, Audio: Yes (Synchronized Sound))"
+Video,Kling 3.0 Standard (Audio Off),Kuaishou / Fal.ai / Kuaishou,Per second ($0.168/s),0.84,168,84,"5-second video (1080p, Audio: No)"
+Video,Kling 3.0 Standard (Audio On),Kuaishou / Fal.ai / Kuaishou,Per second ($0.252/s),1.26,252,126,"5-second video (1080p, Audio: Yes (Synchronized Sound))"
+Video,Kling 3.0 Pro (Audio Off),Kuaishou / Fal.ai / Kuaishou,Per second ($0.25/s),1.25,250,125,"5-second video (4K Ultra HD, Audio: No)"
+Video,Kling 3.0 Pro (Audio On),Kuaishou / Fal.ai / Kuaishou,Per second ($0.35/s),1.75,350,175,"5-second video (4K Ultra HD, Audio: Yes (Synchronized Sound))"
+Video,MiniMax H3 (768P),Hailuo AI / MiniMax / Fal.ai / Hailuo,Per second ($0.16/s),0.8,160,80,"5-second video (768p, Audio: No)"
+Video,MiniMax H3 (2K),Hailuo AI / MiniMax / Fal.ai / Hailuo,Per second ($0.26/s),1.3,260,130,"5-second video (2K Super HD, Audio: No)"
+Video,Hailuo v2.3 Pro (MiniMax-01),Hailuo AI / MiniMax / Fal.ai / Hailuo,Per second ($0.045/s),0.27,54,27,"5-second video (720p (6s flat), Audio: No)"
+Video,Vidu Q3 (360p / 540p),ShengShu Vidu / Fal.ai / ShengShu,Per second ($0.07/s),0.35,70,35,"5-second video (360p – 540p, Audio: No)"
+Video,Vidu Q3 (720p / 1080p),ShengShu Vidu / Fal.ai / ShengShu,Per second ($0.154/s),0.77,154,77,"5-second video (720p – 1080p, Audio: No)"
+Video,Veo 2,Google DeepMind / Fal.ai / Google,Per second ($0.5/s),2.5,500,250,"5-second video (1080p Cinema, Audio: No)"
+Video,"Veo 3.1 Fast (720p/1080p, No Audio)",Google DeepMind / Fal.ai / Google,Per second ($0.1/s),0.5,100,50,"5-second video (720p / 1080p, Audio: No)"
+Video,"Veo 3.1 Fast (720p/1080p, Audio)",Google DeepMind / Fal.ai / Google,Per second ($0.15/s),0.75,150,75,"5-second video (720p / 1080p, Audio: Yes (Native Audio))"
+Video,"Veo 3.1 Fast (4K, Audio)",Google DeepMind / Fal.ai / Google,Per second ($0.35/s),1.75,350,175,"5-second video (4K Ultra HD, Audio: Yes (Native Audio))"
+Video,"Veo 3.1 Full (720p/1080p, No Audio)",Google DeepMind / Fal.ai / Google,Per second ($0.2/s),1,200,100,"5-second video (720p / 1080p Master, Audio: No)"
+Video,"Veo 3.1 Full (720p/1080p, Audio)",Google DeepMind / Fal.ai / Google,Per second ($0.4/s),2,400,200,"5-second video (720p / 1080p Master, Audio: Yes (Native Audio))"
+Video,"Veo 3.1 Full (4K, Audio)",Google DeepMind / Fal.ai / Google,Per second ($0.6/s),3,600,300,"5-second video (4K Ultra HD Master, Audio: Yes (Native Audio))"
+Video,Sora 2 (720p),OpenAI / Fal.ai / OpenAI,Per second ($0.1/s),0.5,100,50,"5-second video (720p (4s / 8s clips), Audio: No)"
+Video,Sora 2 Pro (720p),OpenAI / Fal.ai / OpenAI,Per second ($0.3/s),1.5,300,150,"5-second video (720p Cinematic, Audio: No)"
+Video,Sora 2 Pro (1080p),OpenAI / Fal.ai / OpenAI,Per second ($0.5/s),2.5,500,250,"5-second video (1080p Cinematic, Audio: No)"
+Video,Seedance 1.5 Pro (No Audio),ByteDance / Fal.ai / ByteDance,Per second ($0.026/s),0.13,26,13,"5-second video (720p, Audio: No)"
+Video,Seedance 1.5 Pro (With Audio),ByteDance / Fal.ai / ByteDance,Per second ($0.052/s),0.26,52,26,"5-second video (720p, Audio: Yes (Native Audio))"
+Video,Seedance 2.0 Pro (BytePlus Ultra),ByteDance / BytePlus / Cloud,Per second ($0.15/s),0.75,150,75,"5-second video (4K Ultra HD, Audio: Yes (Audio Reactive))"
+Video,PixVerse v5 (720p),PixVerse / Fal.ai / PixVerse,Per second ($0.04/s),0.2,40,20,"5-second video (720p, Audio: No)"
+Video,PixVerse v5 (1080p),PixVerse / Fal.ai / PixVerse,Per second ($0.07/s),0.35,70,35,"5-second video (1080p, Audio: No)"
+Video,Runway Gen-3 Alpha Turbo,Runway / Runway Direct API,Per second ($0.05/s),0.25,50,25,"5-second video (720p Turbo, Audio: No)"
+Video,Runway Gen-3 Alpha / Gen-4,Runway / Runway Direct API,Per second ($0.125/s),0.625,125,62,"5-second video (1080p High-Fidelity, Audio: No)"
+Video,Wan 2.1 (Self-Hosted H100),Wan Video (Alibaba) / GMI Cloud GPU,Per second ($0.0036/s),0.018,3.6,2,"5-second video (720p (Local Compute), Audio: No)"
+3D & World,Tripo3D (H3.1 Image to Mesh),Tripo / Fal.ai / Tripo,Per 3D mesh generation,0.04,8,4,.obj / .glb 3D mesh
+3D & World,Hunyuan 3D 3.1 Pro,Tencent / Fal.ai / Tencent,Per 3D model generation,0.035,7,4,.obj / .glb with PBR materials
+3D & World,Rodin 2.5 Fast,Deemos / Fal.ai / Deemos,Per detailed avatar mesh,0.05,10,5,Detailed Character/Avatar Mesh
+3D & World,Meshy v6,Meshy / Fal.ai / Meshy,Per 3D object + PBR textures,0.045,9,5,.glb / .fbx textured mesh
+3D & World,World Labs 3D Scene,World Labs / World Labs Direct API,Per interactive 3D world scene,0.75,150,75,Interactive Gaussian Splatting World
