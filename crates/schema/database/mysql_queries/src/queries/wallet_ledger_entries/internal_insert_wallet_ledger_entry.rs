@@ -23,19 +23,19 @@ pub (crate) struct InsertWalletLedgerEntry<'a> {
   pub maybe_entity_ref: Option<String>,
 
   /// Change in credits (positive or negative) across banked and/or monthly credits.
-  pub credits_delta: i64,
+  pub credits_delta: rust_decimal::Decimal,
 
   /// Banked credits before change.
-  pub banked_credits_before: u64,
+  pub banked_credits_before: rust_decimal::Decimal,
 
   /// Banked credits after change.
-  pub banked_credits_after: u64,
+  pub banked_credits_after: rust_decimal::Decimal,
 
   /// Banked credits before change.
-  pub monthly_credits_before: u64,
+  pub monthly_credits_before: rust_decimal::Decimal,
 
   /// Banked credits after change.
-  pub monthly_credits_after: u64,
+  pub monthly_credits_after: rust_decimal::Decimal,
 }
 
 impl <'a> InsertWalletLedgerEntry<'a> {

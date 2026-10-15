@@ -6,6 +6,7 @@ use mysql_queries::queries::wallets::create_new_artcraft_wallet_for_owner_user::
 use mysql_queries::queries::wallets::find_primary_wallet_token_for_owner::find_primary_wallet_token_for_owner_using_connection;
 use mysql_queries::queries::wallets::spend::try_to_spend_wallet_balance::try_to_spend_wallet_balance;
 use mysql_queries::queries::wallets::spend::wallet_spend_error::WalletSpendError;
+use rust_decimal::Decimal;
 use sqlx::pool::PoolConnection;
 use sqlx::{Acquire, MySql};
 use tokens::tokens::users::UserToken;
@@ -26,23 +27,34 @@ pub async fn attempt_wallet_deduction_else_common_web_error(
   connection: &mut PoolConnection<MySql>
 ) -> Result<WalletDeductionResult, CommonWebError> {
 
-  // Chat token pricing is already in 1 Credit = 1 ETB format and is not scaled.
-  // Non-chat generative jobs (image, video, audio, 3D mesh, splat) have their USD-cent base costs
-  // scaled by the centralized multiplier (default 2x).
   let final_amount = if maybe_reference_token == Some("openrouter_chat_token_spend") {
-    amount_to_deduct
+    Decimal::from(amount_to_deduct)
   } else {
-    scale_non_chat_credits(amount_to_deduct)
+    Decimal::from(scale_non_chat_credits(amount_to_deduct))
   };
 
-  let result = try_wallet_deduction(
+  attempt_wallet_deduction_decimal_else_common_web_error(
     user_token,
     maybe_reference_token,
     final_amount,
     connection
+  ).await
+}
+
+pub async fn attempt_wallet_deduction_decimal_else_common_web_error(
+  user_token: &UserToken,
+  maybe_reference_token: Option<&str>,
+  amount_to_deduct: Decimal,
+  connection: &mut PoolConnection<MySql>
+) -> Result<WalletDeductionResult, CommonWebError> {
+  let amount_to_deduct = amount_to_deduct.round_dp(2);
+  let result = try_wallet_deduction(
+    user_token,
+    maybe_reference_token,
+    amount_to_deduct,
+    connection
   ).await;
 
-  // Infallible for now.
   match result {
     Ok(deduction_result) => Ok(deduction_result),
     Err(err) => Err(match err {
@@ -73,7 +85,7 @@ pub async fn attempt_wallet_deduction_else_common_web_error(
 async fn try_wallet_deduction(
   owner_user_token: &UserToken,
   maybe_reference_token: Option<&str>,
-  amount_to_deduct: u64,
+  amount_to_deduct: Decimal,
   connection: &mut PoolConnection<MySql>
 ) -> Result<WalletDeductionResult, WalletSpendError>
 {
@@ -113,7 +125,7 @@ async fn try_wallet_deduction_with_transaction(
   owner_user_token: &UserToken,
   maybe_wallet_token: Option<WalletToken>,
   maybe_reference_token: Option<&str>,
-  amount_to_deduct: u64,
+  amount_to_deduct: Decimal,
   transaction: &mut sqlx::Transaction<'_, MySql>,
 ) -> Result<WalletDeductionResult, WalletSpendError>
 {

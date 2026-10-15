@@ -111,7 +111,7 @@ pub async fn mark_chapa_subscription_period_paid(
 
   let wallet_update = refill_monthly_credits_balance_on_wallet(
     &wallet_token,
-    credits_per_payment,
+    rust_decimal::Decimal::from(credits_per_payment),
     Some(tx_ref),
     transaction,
   ).await?;

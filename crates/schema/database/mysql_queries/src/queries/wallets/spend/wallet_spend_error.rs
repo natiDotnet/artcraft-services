@@ -3,6 +3,8 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use crate::errors::select_optional_record_error::SelectOptionalRecordError;
 
+use rust_decimal::Decimal;
+
 #[derive(Debug)]
 pub enum WalletSpendError {
   /// Requested an invalid amount to spend.
@@ -10,8 +12,8 @@ pub enum WalletSpendError {
   
   /// Not enough funds to cover the spend
   InsufficientBalance {
-    requested_to_spend_amount: u64,
-    available_amount: u64,
+    requested_to_spend_amount: Decimal,
+    available_amount: Decimal,
   },
   
   /// Error selecting the wallet

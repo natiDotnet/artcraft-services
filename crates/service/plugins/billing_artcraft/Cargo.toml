@@ -42,6 +42,7 @@ chrono.workspace = true
 log.workspace = true
 once_cell.workspace = true
 reqwest.workspace = true
+rust_decimal.workspace = true
 serde.workspace = true
 serde_derive.workspace = true
 serde_json.workspace = true

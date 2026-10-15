@@ -25,7 +25,7 @@ pub struct LedgerPaymentRef {
   pub owner_user_token: UserToken,
 
   /// Credits actually granted — becomes `user_spend_events.maybe_credits_granted`.
-  pub credits_delta: i32,
+  pub credits_delta: rust_decimal::Decimal,
 
   /// When we credited the wallet (≈ settlement; spend events still bin on the
   /// Stripe object's own timestamp).
@@ -60,7 +60,7 @@ SELECT
   wle.entry_type       AS `entry_type!`,
   wle.token            AS `ledger_token!: WalletLedgerEntryToken`,
   w.owner_user_token   AS `owner_user_token!: UserToken`,
-  wle.credits_delta    AS `credits_delta!`,
+  wle.credits_delta    AS `credits_delta!: rust_decimal::Decimal`,
   wle.created_at        AS `created_at!: DateTime<Utc>`
 FROM wallet_ledger_entries wle
 JOIN wallets w ON w.token = wle.wallet_token

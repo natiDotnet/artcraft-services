@@ -9,6 +9,8 @@ use crate::queries::wallet_ledger_entries::internal_insert_wallet_ledger_entry::
 use crate::queries::wallets::internal_select_wallet_balance_for_update::internal_select_wallet_balance_for_update;
 use crate::queries::wallets::refund::wallet_refund_error::WalletRefundError;
 
+use rust_decimal::Decimal;
+
 pub enum WalletRefundOutcome {
   /// The refund was successfully applied.
   Refunded(WalletRefundSummary),
@@ -22,9 +24,9 @@ pub struct WalletRefundSummary {
   pub wallet_token: WalletToken,
   pub original_ledger_entry_token: WalletLedgerEntryToken,
   pub refund_ledger_entry_token: WalletLedgerEntryToken,
-  pub refund_amount: u64,
-  pub banked_credits_before: u64,
-  pub banked_credits_after: u64,
+  pub refund_amount: Decimal,
+  pub banked_credits_before: Decimal,
+  pub banked_credits_after: Decimal,
 }
 
 /// Refund a wallet ledger entry, crediting the amount back as banked (durable) credits.
@@ -66,11 +68,11 @@ pub async fn try_to_refund_ledger_entry(
     transaction,
   ).await.map_err(|_| WalletRefundError::WalletNotFound)?;
 
-  // credits_delta was negative for a deduction (e.g. -100). The refund amount is its magnitude.
-  let refund_amount = original_entry.credits_delta.unsigned_abs();
+  // credits_delta was negative for a deduction (e.g. -1.00). The refund amount is its magnitude.
+  let refund_amount = original_entry.credits_delta.abs().round_dp(2);
 
-  let banked_credits_before = wallet.banked_credits;
-  let banked_credits_after = banked_credits_before.saturating_add(refund_amount);
+  let banked_credits_before = wallet.banked_credits.round_dp(2);
+  let banked_credits_after = (banked_credits_before + refund_amount).round_dp(2);
 
   // Step 5: Insert the refund ledger entry.
   //
@@ -82,7 +84,7 @@ pub async fn try_to_refund_ledger_entry(
     entry_type: WalletLedgerEntryType::RefundBanked,
     maybe_entity_ref: Some(ledger_entry_token.to_string()),
 
-    credits_delta: refund_amount as i64,
+    credits_delta: refund_amount,
 
     banked_credits_before,
     banked_credits_after,
@@ -97,7 +99,7 @@ pub async fn try_to_refund_ledger_entry(
     .await?;
 
   // Step 6: Credit the wallet's banked balance.
-  sqlx::query!(
+  let _ = sqlx::query!(
     r#"
 UPDATE wallets
 SET
@@ -111,7 +113,7 @@ LIMIT 1
   ).execute(&mut **transaction).await?;
 
   // Step 7: Mark the original entry as refunded and link it to the new refund record.
-  sqlx::query!(
+  let _ = sqlx::query!(
     r#"
 UPDATE wallet_ledger_entries
 SET
@@ -150,11 +152,11 @@ struct LedgerEntryForUpdate {
   entry_type: WalletLedgerEntryType,
   is_refunded: bool,
   /// Negative for deductions, positive for credits.
-  credits_delta: i64,
-  banked_credits_before: u64,
-  banked_credits_after: u64,
-  monthly_credits_before: u64,
-  monthly_credits_after: u64,
+  credits_delta: Decimal,
+  banked_credits_before: Decimal,
+  banked_credits_after: Decimal,
+  monthly_credits_before: Decimal,
+  monthly_credits_after: Decimal,
 }
 
 /// SELECT ... FOR UPDATE on wallet_ledger_entries.
@@ -168,11 +170,11 @@ async fn select_ledger_entry_for_update(
     wallet_token: WalletToken,
     entry_type: String,
     is_refunded: bool,
-    credits_delta: i32,
-    banked_credits_before: u32,
-    banked_credits_after: u32,
-    monthly_credits_before: u32,
-    monthly_credits_after: u32,
+    credits_delta: Decimal,
+    banked_credits_before: Decimal,
+    banked_credits_after: Decimal,
+    monthly_credits_before: Decimal,
+    monthly_credits_after: Decimal,
   }
 
   let raw = sqlx::query_as!(
@@ -182,11 +184,11 @@ SELECT
   wallet_token as `wallet_token: tokens::tokens::wallets::WalletToken`,
   entry_type,
   is_refunded as `is_refunded: bool`,
-  credits_delta,
-  banked_credits_before,
-  banked_credits_after,
-  monthly_credits_before,
-  monthly_credits_after
+  credits_delta as `credits_delta: Decimal`,
+  banked_credits_before as `banked_credits_before: Decimal`,
+  banked_credits_after as `banked_credits_after: Decimal`,
+  monthly_credits_before as `monthly_credits_before: Decimal`,
+  monthly_credits_after as `monthly_credits_after: Decimal`
 FROM wallet_ledger_entries
 WHERE token = ?
 LIMIT 1
@@ -210,10 +212,10 @@ FOR UPDATE
     wallet_token: raw.wallet_token,
     entry_type,
     is_refunded: raw.is_refunded,
-    credits_delta: raw.credits_delta as i64,
-    banked_credits_before: raw.banked_credits_before as u64,
-    banked_credits_after: raw.banked_credits_after as u64,
-    monthly_credits_before: raw.monthly_credits_before as u64,
-    monthly_credits_after: raw.monthly_credits_after as u64,
+    credits_delta: raw.credits_delta,
+    banked_credits_before: raw.banked_credits_before,
+    banked_credits_after: raw.banked_credits_after,
+    monthly_credits_before: raw.monthly_credits_before,
+    monthly_credits_after: raw.monthly_credits_after,
   })
 }

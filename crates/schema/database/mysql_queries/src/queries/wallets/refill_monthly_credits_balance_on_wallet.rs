@@ -2,13 +2,13 @@ use crate::queries::wallet_ledger_entries::internal_insert_wallet_ledger_entry::
 use crate::queries::wallets::internal_select_wallet_balance_for_update::internal_select_wallet_balance_for_update;
 use crate::queries::wallets::wallet_update_summary::WalletUpdateSummary;
 use enums::by_table::wallet_ledger_entries::wallet_ledger_entry_type::WalletLedgerEntryType;
-use num_traits::ToPrimitive;
+use rust_decimal::Decimal;
 use sqlx::MySql;
 use tokens::tokens::wallets::WalletToken;
 
 pub async fn refill_monthly_credits_balance_on_wallet(
   wallet_token: &WalletToken,
-  monthly_amount: u64,
+  monthly_amount: Decimal,
   maybe_ledger_ref: Option<&str>,
   transaction: &mut sqlx::Transaction<'_, MySql>,
 ) -> anyhow::Result<WalletUpdateSummary> {
@@ -19,10 +19,11 @@ pub async fn refill_monthly_credits_balance_on_wallet(
     transaction
   ).await?;
 
-  let existing_monthly_balance = wallet.monthly_credits;
+  let monthly_amount = monthly_amount.round_dp(2);
+  let existing_monthly_balance = wallet.monthly_credits.round_dp(2);
   let new_monthly_balance = monthly_amount;
 
-  let result = sqlx::query!(
+  let _result = sqlx::query!(
         r#"
     UPDATE wallets
     SET
@@ -41,7 +42,7 @@ pub async fn refill_monthly_credits_balance_on_wallet(
     entry_type: WalletLedgerEntryType::CreditMonthly,
     maybe_entity_ref: maybe_ledger_ref.map(|s| s.to_string()),
 
-    credits_delta: monthly_amount.to_i64().unwrap_or(0),
+    credits_delta: monthly_amount,
     
     monthly_credits_before: existing_monthly_balance,
     monthly_credits_after: new_monthly_balance,

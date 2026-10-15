@@ -12,11 +12,11 @@ pub (crate) async fn internal_insert_wallet_created_ledger_entry(
     wallet_token,
     entry_type: WalletLedgerEntryType::Create,
     maybe_entity_ref: None,
-    credits_delta: 0,
-    banked_credits_before: 0,
-    banked_credits_after: 0,
-    monthly_credits_before: 0,
-    monthly_credits_after: 0,
+    credits_delta: rust_decimal::Decimal::ZERO,
+    banked_credits_before: rust_decimal::Decimal::ZERO,
+    banked_credits_after: rust_decimal::Decimal::ZERO,
+    monthly_credits_before: rust_decimal::Decimal::ZERO,
+    monthly_credits_after: rust_decimal::Decimal::ZERO,
   };
 
   record.upsert_with_transaction(transaction).await?;

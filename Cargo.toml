@@ -323,6 +323,7 @@ regex = "1.12.3"
 reqwest = { version = "0.12.23", default-features = false, features = [ "charset", "http2", "system-proxy", "json", "cookies", "rustls-tls", "gzip" ] }
 reqwest-websocket = {  version = "0.5.0" }
 rust-s3 = { version = "0.36.0-beta.2", default-features = false, features = ["fail-on-err", "tags", "tokio-rustls-tls"] }
+rust_decimal = { version = "1.36", features = ["serde-float", "maths"] }
 erased-serde = "0.4"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_derive = "1.0.228"

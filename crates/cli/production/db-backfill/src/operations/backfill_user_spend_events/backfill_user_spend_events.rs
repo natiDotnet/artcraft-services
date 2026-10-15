@@ -7,6 +7,7 @@ use std::time::Instant;
 
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use log::{info, warn};
+use rust_decimal::prelude::ToPrimitive;
 use sqlx::{MySql, Pool};
 
 use enums::by_table::user_spend_events::payment_event_type::PaymentEventType;
@@ -453,7 +454,7 @@ async fn upsert_event(write_pool: &Pool<MySql>, dry_run: bool, input: UpsertInpu
     amount_usd_cents: input.amount_usd_cents,
     // Backfilled rows are all Stripe: no ETB amount.
     maybe_amount_etb_cents: None,
-    maybe_credits_granted: input.ledger.and_then(|l| u32::try_from(l.credits_delta).ok()),
+    maybe_credits_granted: input.ledger.and_then(|l| l.credits_delta.to_u32()),
     maybe_user_subscription_token: None,
     maybe_wallet_ledger_entry_token: input.ledger.map(|l| &l.ledger_token),
     payment_source: PaymentSource::Stripe,

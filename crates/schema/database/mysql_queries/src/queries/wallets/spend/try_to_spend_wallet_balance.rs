@@ -3,9 +3,8 @@ use crate::queries::wallets::internal_select_wallet_balance_for_update::internal
 use crate::queries::wallets::spend::wallet_spend_error::WalletSpendError;
 use crate::queries::wallets::wallet_update_summary::WalletUpdateSummary;
 use enums::by_table::wallet_ledger_entries::wallet_ledger_entry_type::WalletLedgerEntryType;
-use num_traits::ToPrimitive;
+use rust_decimal::Decimal;
 use sqlx::MySql;
-use std::ops::Neg;
 use tokens::tokens::wallets::WalletToken;
 
 // TODO(bt, 2025-09-12): This needs tests and a better interface.
@@ -16,12 +15,12 @@ use tokens::tokens::wallets::WalletToken;
 /// the transaction open for too long beyond this! We're locking the wallet record!
 pub async fn try_to_spend_wallet_balance(
   wallet_token: &WalletToken,
-  amount_to_spend_request: u64,
+  amount_to_spend_request: Decimal,
   maybe_ledger_ref: Option<&str>,
   transaction: &mut sqlx::Transaction<'_, MySql>,
 ) -> Result<WalletUpdateSummary, WalletSpendError> {
-  
-  if amount_to_spend_request == 0 {
+  let amount_to_spend_request = amount_to_spend_request.round_dp(2);
+  if amount_to_spend_request <= Decimal::ZERO {
     return Err(WalletSpendError::InvalidAmountToSpend);
   }
 
@@ -31,7 +30,7 @@ pub async fn try_to_spend_wallet_balance(
     transaction
   ).await?;
 
-  let total_available = wallet.banked_credits.saturating_add(wallet.monthly_credits);
+  let total_available = (wallet.banked_credits + wallet.monthly_credits).round_dp(2);
   
   if total_available < amount_to_spend_request {
     return Err(WalletSpendError::InsufficientBalance {
@@ -40,10 +39,8 @@ pub async fn try_to_spend_wallet_balance(
     });
   }
   
-  // TODO(bt, 2025-09-12): This needs tests
-  
-  let existing_banked_balance = wallet.banked_credits;
-  let existing_monthly_balance = wallet.monthly_credits;
+  let existing_banked_balance = wallet.banked_credits.round_dp(2);
+  let existing_monthly_balance = wallet.monthly_credits.round_dp(2);
   
   let mut updated_banked_balance = existing_banked_balance;
   let mut updated_monthly_balance = existing_monthly_balance;
@@ -51,12 +48,12 @@ pub async fn try_to_spend_wallet_balance(
   let ledger_entry_type;
   
   if existing_monthly_balance >= amount_to_spend_request {
-    updated_monthly_balance = existing_monthly_balance.saturating_sub(amount_to_spend_request);
+    updated_monthly_balance = (existing_monthly_balance - amount_to_spend_request).round_dp(2);
     ledger_entry_type = WalletLedgerEntryType::DeductMonthly;
     
-  } else if existing_monthly_balance > 0 {
+  } else if existing_monthly_balance > Decimal::ZERO {
     let paid = existing_monthly_balance;
-    let remaining_invoice = amount_to_spend_request.saturating_sub(paid);
+    let remaining_invoice = (amount_to_spend_request - paid).round_dp(2);
     
     if remaining_invoice > existing_banked_balance {
       // NB: We shouldn't hit this, but just to be safe...
@@ -66,12 +63,12 @@ pub async fn try_to_spend_wallet_balance(
       });
     }
     
-    updated_banked_balance = existing_banked_balance.saturating_sub(remaining_invoice);
-    updated_monthly_balance = 0;
+    updated_banked_balance = (existing_banked_balance - remaining_invoice).round_dp(2);
+    updated_monthly_balance = Decimal::ZERO;
     ledger_entry_type = WalletLedgerEntryType::DeductMixed;
     
   } else if existing_banked_balance >= amount_to_spend_request {
-    updated_banked_balance = existing_banked_balance.saturating_sub(amount_to_spend_request);
+    updated_banked_balance = (existing_banked_balance - amount_to_spend_request).round_dp(2);
     ledger_entry_type = WalletLedgerEntryType::DeductBanked;
     
   } else {
@@ -82,7 +79,7 @@ pub async fn try_to_spend_wallet_balance(
     });
   }
   
-  let result = sqlx::query!(
+  let _result = sqlx::query!(
         r#"
     UPDATE wallets
     SET
@@ -97,7 +94,7 @@ pub async fn try_to_spend_wallet_balance(
     wallet_token.as_str(),
   ).execute(&mut **transaction).await?;
   
-  let spent = amount_to_spend_request.to_i64().unwrap_or(0).neg();
+  let spent = -amount_to_spend_request;
 
   let record = InsertWalletLedgerEntry {
     wallet_token,

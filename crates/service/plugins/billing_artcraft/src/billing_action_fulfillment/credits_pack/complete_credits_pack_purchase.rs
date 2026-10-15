@@ -49,7 +49,7 @@ pub async fn complete_credits_pack_purchase(
   
   let wallet_update = add_durable_banked_balance_to_wallet(
     &wallet_token,
-    credits_purchased,
+    rust_decimal::Decimal::from(credits_purchased),
     maybe_ledger_ref,
     None,
     transaction,

@@ -92,7 +92,7 @@ pub async fn mark_subscription_as_paid(
 
   let wallet_update = refill_monthly_credits_balance_on_wallet(
     &wallet_token, 
-    monthly_credits, 
+    rust_decimal::Decimal::from(monthly_credits), 
     maybe_ledger_ref,
     transaction
   ).await?;

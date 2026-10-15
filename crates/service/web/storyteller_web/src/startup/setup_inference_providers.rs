@@ -113,12 +113,19 @@ pub fn setup_inference_providers() -> AnyhowResult<InferenceProviders> {
     worldlabs: WorldLabsData {
       api_key: easyenv::get_env_string_required("WORLDLABS_API_KEY")?,
     },
-    openrouter: OpenRouterData {
-      api_key: easyenv::get_env_string_or_default("OPENROUTER_API_KEY", "unset"),
-      base_url: easyenv::get_env_string_or_default("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
-      default_model: easyenv::get_env_string_or_default("OPENROUTER_DEFAULT_MODEL", "deepseek/deepseek-chat"),
-      site_url: easyenv::get_env_string_or_default("OPENROUTER_SITE_URL", "http://localhost:4201"),
-      app_name: easyenv::get_env_string_or_default("OPENROUTER_APP_NAME", "ArtCraft Studio"),
+    openrouter: {
+      let mut key = easyenv::get_env_string_or_default("OPENROUTER_API_KEY", "unset");
+      if key == "unset" || key.trim().is_empty() {
+        let _ = easyenv::from_filename(".env");
+        key = easyenv::get_env_string_or_default("OPENROUTER_API_KEY", "unset");
+      }
+      OpenRouterData {
+        api_key: key,
+        base_url: easyenv::get_env_string_or_default("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+        default_model: easyenv::get_env_string_or_default("OPENROUTER_DEFAULT_MODEL", "deepseek/deepseek-chat"),
+        site_url: easyenv::get_env_string_or_default("OPENROUTER_SITE_URL", "http://localhost:4201"),
+        app_name: easyenv::get_env_string_or_default("OPENROUTER_APP_NAME", "ArtCraft Studio"),
+      }
     },
     litellm: LiteLlmData {
       api_key: easyenv::get_env_string_or_default("LITELLM_API_KEY", "sk-litellm-master-key"),

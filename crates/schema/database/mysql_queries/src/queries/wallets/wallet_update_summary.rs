@@ -1,4 +1,5 @@
 use enums::common::payments_namespace::PaymentsNamespace;
+use rust_decimal::Decimal;
 use tokens::tokens::users::UserToken;
 use tokens::tokens::wallet_ledger_entries::WalletLedgerEntryToken;
 use tokens::tokens::wallets::WalletToken;
@@ -12,9 +13,9 @@ pub struct WalletUpdateSummary {
 
   pub owner_user_token: UserToken,
 
-  pub banked_credits_now: u64,
-  pub monthly_credits_now: u64,
+  pub banked_credits_now: Decimal,
+  pub monthly_credits_now: Decimal,
 
-  pub banked_credits_before: u64,
-  pub monthly_credits_before: u64,
+  pub banked_credits_before: Decimal,
+  pub monthly_credits_before: Decimal,
 }

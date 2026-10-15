@@ -12,10 +12,12 @@ use tokens::tokens::media_files::MediaFileToken;
 use tokens::tokens::users::UserToken;
 use tokens::tokens::wallet_ledger_entries::WalletLedgerEntryToken;
 
+use rust_decimal::Decimal;
+
 pub struct UserJobForModerationResult {
   pub job_status: JobStatusPlus,
   pub job_failure_reason: Option<String>,
-  pub credits_delta: Option<i32>,
+  pub credits_delta: Option<Decimal>,
   pub maybe_linked_refund_ledger_token: Option<WalletLedgerEntryToken>,
   pub on_success_result_media_token: Option<MediaFileToken>,
   pub job_token: InferenceJobToken,
@@ -37,7 +39,7 @@ pub async fn list_user_jobs_for_moderation(
 SELECT
     j.status as `job_status: enums::common::job_status_plus::JobStatusPlus`,
     j.failure_reason as job_failure_reason,
-    wle.credits_delta,
+    wle.credits_delta as `credits_delta?: Decimal`,
     wle.maybe_linked_refund_ledger_token as `maybe_linked_refund_ledger_token: tokens::tokens::wallet_ledger_entries::WalletLedgerEntryToken`,
     j.on_success_result_entity_token as `on_success_result_media_token: tokens::tokens::media_files::MediaFileToken`,
     j.token as `job_token: tokens::tokens::generic_inference_jobs::InferenceJobToken`,

@@ -111,6 +111,166 @@ pub const SUPPORTED_CHAT_MODELS: &[(&str, &str, ModelPricing)] = &[
       output_per_million: 100.0,
     },
   ),
+  (
+    "z-ai/glm-5.3-flash",
+    "zhipu",
+    ModelPricing {
+      input_per_million: 8.46,
+      output_per_million: 211.5,
+    },
+  ),
+  (
+    "deepseek/deepseek-v4-flash-0731",
+    "deepseek",
+    ModelPricing {
+      input_per_million: 3.38,
+      output_per_million: 135.36,
+    },
+  ),
+  (
+    "minimax/minimax-m2.7",
+    "minimax",
+    ModelPricing {
+      input_per_million: 49.35,
+      output_per_million: 197.4,
+    },
+  ),
+  (
+    "nvidia/nemotron-3.5-super-vl:free",
+    "nvidia",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "inception/mercury-decide:free",
+    "inception",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "respan/span-01-lite:free",
+    "respan",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "liquid/lfm-2.5-embedding-350m:free",
+    "liquid",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "dots-studio/dots-3-note-preview:free",
+    "dots-studio",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "liquid/lfm-2.5-2.6b:free",
+    "liquid",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "nvidia/nemotron-3.5-lightning:free",
+    "nvidia",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "thinkingmachines/inkling-small:free",
+    "thinkingmachines",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "poolside/laguna-s-2.1:free",
+    "poolside",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "thinkingmachines/inkling:free",
+    "thinkingmachines",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "cohere/north-mini-code:free",
+    "cohere",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "nvidia/nemotron-3.5-content-safety:free",
+    "nvidia",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nvidia",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "nvidia",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "google/gemma-4-26b-a4b-it:free",
+    "google",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "google/gemma-4-31b-it:free",
+    "google",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "nvidia",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
 ];
 
 const DEFAULT_PRICING: ModelPricing = ModelPricing {
@@ -121,6 +281,12 @@ const DEFAULT_PRICING: ModelPricing = ModelPricing {
 /// Get the pricing rules for a model ID.
 pub fn get_model_pricing(model_id: &str) -> ModelPricing {
   let trimmed = model_id.trim();
+  if trimmed.ends_with(":free") {
+    return ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    };
+  }
   for (id, _, pricing) in SUPPORTED_CHAT_MODELS {
     if trimmed.eq_ignore_ascii_case(id) {
       return *pricing;
@@ -129,25 +295,37 @@ pub fn get_model_pricing(model_id: &str) -> ModelPricing {
   DEFAULT_PRICING
 }
 
+use rust_decimal::Decimal;
+
 /// Calculate credit deduction based on actual prompt and completion tokens.
-/// 1 Credit = 1 ETB.
+/// 1 Credit = 1 ETB, rounded to 2 decimal places (0.01 credits = 1 ETB cent).
 pub fn calculate_token_cost_credits(
   model_id: &str,
   prompt_tokens: u64,
   completion_tokens: u64,
-) -> u64 {
+) -> Decimal {
   let total_tokens = prompt_tokens + completion_tokens;
   if total_tokens == 0 {
-    return 0;
+    return Decimal::ZERO;
   }
 
   let pricing = get_model_pricing(model_id);
+  // Free models charge 0 credits
+  if pricing.input_per_million == 0.0 && pricing.output_per_million == 0.0 {
+    return Decimal::ZERO;
+  }
+
   let prompt_cost = (prompt_tokens as f64 * pricing.input_per_million) / 1_000_000.0;
   let completion_cost = (completion_tokens as f64 * pricing.output_per_million) / 1_000_000.0;
   let total_cost = prompt_cost + completion_cost;
 
-  // Minimum charge is 1 credit if tokens were consumed
-  (total_cost.ceil() as u64).max(1)
+  let calculated = Decimal::from_f64_retain(total_cost)
+    .unwrap_or(Decimal::ZERO)
+    .round_dp(2);
+
+  // Minimum charge is 0.01 credits (1 ETB cent) if tokens were consumed
+  let min_charge = Decimal::new(1, 2); // 0.01
+  calculated.max(min_charge)
 }
 
 /// Return list of models in standard OpenAI `/v1/models` format.

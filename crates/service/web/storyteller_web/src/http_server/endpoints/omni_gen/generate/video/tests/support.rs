@@ -58,8 +58,8 @@ use crate::http_server::web_utils::scoped_temp_dir_creator::ScopedTempDirCreator
 use crate::http_server::web_utils::web_opaque_cursor_encoder_v2::WebOpaqueCursorEncoderV2;
 use crate::http_server::web_utils::web_sort_key_crypto::WebSortKeyCrypto;
 use crate::startup::setup_inference_providers::{
-  BeebleData, FalData, GmiCloudData, GrokApiData, InferenceProviders, KinoviWebData, OpenAiData,
-  WorldLabsData,
+  BeebleData, FalData, GmiCloudData, GrokApiData, InferenceProviders, KinoviWebData, LiteLlmData,
+  OpenAiData, OpenRouterData, WorldLabsData,
 };
 use crate::startup::setup_pager::build_pager;
 use crate::startup::setup_static_feature_flags::setup_static_feature_flags;
@@ -578,6 +578,7 @@ pub(crate) fn build_test_server_state(pool: MySqlPool, media_cdn_override_url: S
   struct ExpensiveDummies {
     stripe: StripeSettings,
     stripe_artcraft: billing_artcraft_component::utils::artcraft_stripe_config::ArtcraftStripeConfigWithClient,
+    chapa_artcraft: billing_artcraft_component::utils::artcraft_chapa_config::ArtcraftChapaConfigWithClient,
     elasticsearch: Elasticsearch,
     private_bucket_client: LegacyBucketClient,
     public_bucket_client: LegacyBucketClient,
@@ -659,6 +660,7 @@ pub(crate) fn build_test_server_state(pool: MySqlPool, media_cdn_override_url: S
     server_info: ServerInfo { build_sha: "test".to_string() },
     stripe: dummies.stripe.clone(),
     stripe_artcraft: dummies.stripe_artcraft.clone(),
+    chapa_artcraft: dummies.chapa_artcraft.clone(),
     hostname: "test-host".to_string(),
     startup_time: Utc::now(),
     server_environment,
@@ -704,6 +706,19 @@ pub(crate) fn build_test_server_state(pool: MySqlPool, media_cdn_override_url: S
       },
       openai: OpenAiData { api_key: "test".to_string() },
       worldlabs: WorldLabsData { api_key: "test".to_string() },
+      openrouter: OpenRouterData {
+        api_key: "test".to_string(),
+        base_url: "https://openrouter.ai/api/v1".to_string(),
+        default_model: "deepseek/deepseek-v4-flash-0731".to_string(),
+        site_url: "http://localhost".to_string(),
+        app_name: "ArtCraft Test".to_string(),
+      },
+      litellm: LiteLlmData {
+        api_key: "test".to_string(),
+        base_url: "http://localhost:4000".to_string(),
+        default_model: "gpt-4o-mini".to_string(),
+        master_key: "test".to_string(),
+      },
     },
     resend: ResendData { api_key: "test".to_string() },
     pager,

@@ -8,9 +8,17 @@ use mysql_queries::queries::wallets::find_primary_wallet_for_owner::find_primary
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::billing::wallets::attempt_wallet_deduction::attempt_wallet_deduction_else_common_web_error;
+use rust_decimal::prelude::ToPrimitive;
+use rust_decimal::Decimal;
+
+use crate::billing::wallets::attempt_wallet_deduction::{
+  attempt_wallet_deduction_decimal_else_common_web_error,
+  attempt_wallet_deduction_else_common_web_error,
+};
 use crate::http_server::common_responses::common_web_error::CommonWebError;
-use crate::http_server::endpoints::chat::chat_pricing::calculate_token_cost_credits;
+use crate::http_server::endpoints::chat::chat_pricing::{
+  calculate_token_cost_credits, get_model_pricing,
+};
 use crate::http_server::endpoints::developer_api_keys::db::{
   get_user_and_token_by_developer_key, increment_key_spend,
 };
@@ -114,28 +122,7 @@ pub async fn chat_completions_handler(
     (session.user_token, None)
   };
 
-  // 2. Pre-flight check: ensure user has active credits in their primary wallet.
-  //    If balance is 0, reject upfront with 402 Payment Required ("Not enough credits.").
-  let primary_wallet = find_primary_wallet_for_owner_using_connection(
-    &user_token,
-    PaymentsNamespace::Artcraft,
-    &mut mysql_connection,
-  )
-  .await
-  .map_err(|err| {
-    error!("Error querying primary wallet: {:?}", err);
-    CommonWebError::from_error(err)
-  })?;
-
-  let available_balance = primary_wallet
-    .map(|w| w.banked_credits + w.monthly_credits)
-    .unwrap_or(0);
-
-  if available_balance == 0 {
-    return Err(CommonWebError::PaymentRequired);
-  }
-
-  // 3. OpenRouter configuration check
+  // 2. OpenRouter configuration check
   let openrouter_config = &server_state.inference_providers.openrouter;
   if openrouter_config.api_key.trim().is_empty() || openrouter_config.api_key == "unset" {
     return Err(CommonWebError::BadInputWithSimpleMessage(
@@ -144,16 +131,44 @@ pub async fn chat_completions_handler(
     ));
   }
 
+  let model = payload
+    .model
+    .clone()
+    .unwrap_or_else(|| openrouter_config.default_model.clone());
+
+  // 3. Pre-flight check: ensure user has active credits in their primary wallet,
+  //    unless the requested model is free.
+  let is_free_model = {
+    let pricing = get_model_pricing(&model);
+    pricing.input_per_million == 0.0 && pricing.output_per_million == 0.0
+  };
+
+  if !is_free_model {
+    let primary_wallet = find_primary_wallet_for_owner_using_connection(
+      &user_token,
+      PaymentsNamespace::Artcraft,
+      &mut mysql_connection,
+    )
+    .await
+    .map_err(|err| {
+      error!("Error querying primary wallet: {:?}", err);
+      CommonWebError::from_error(err)
+    })?;
+
+    let available_balance = primary_wallet
+      .map(|w| w.banked_credits + w.monthly_credits)
+      .unwrap_or(Decimal::ZERO);
+
+    if available_balance <= Decimal::ZERO {
+      return Err(CommonWebError::PaymentRequired);
+    }
+  }
+
   let base_url = if openrouter_config.base_url.trim().is_empty() {
     "https://openrouter.ai/api/v1".to_string()
   } else {
     openrouter_config.base_url.clone()
   };
-
-  let model = payload
-    .model
-    .clone()
-    .unwrap_or_else(|| openrouter_config.default_model.clone());
 
   let client = OpenRouterClient::new(&openrouter_config.api_key).with_base_url(&base_url);
 
@@ -218,50 +233,61 @@ pub async fn chat_completions_handler(
           let cost_credits =
             calculate_token_cost_credits(&bill_model, prompt_tokens, completion_tokens);
 
-          let pool_inner = pool.clone();
-          let u_token = bill_user_token.clone();
-          let dev_key_tok = bill_dev_key_token.clone();
-          let model_id = bill_model.clone();
+          if cost_credits <= Decimal::ZERO {
+            info!(
+              "Model '{}' is free: 0 credits charged for user '{}' (prompt: {}, completion: {})",
+              bill_model,
+              bill_user_token.as_str(),
+              prompt_tokens,
+              completion_tokens
+            );
+          } else {
+            let pool_inner = pool.clone();
+            let u_token = bill_user_token.clone();
+            let dev_key_tok = bill_dev_key_token.clone();
+            let model_id = bill_model.clone();
 
-          actix_web::rt::spawn(async move {
-            match pool_inner.acquire().await {
-              Ok(mut conn) => {
-                match attempt_wallet_deduction_else_common_web_error(
-                  &u_token,
-                  Some("openrouter_chat_token_spend"),
-                  cost_credits,
-                  &mut conn,
-                )
-                .await
-                {
-                  Ok(_) => {
-                    info!(
-                      "Deducted {} credits from user '{}' on model '{}' (prompt: {}, completion: {})",
-                      cost_credits,
-                      u_token.as_str(),
-                      model_id,
-                      prompt_tokens,
-                      completion_tokens
-                    );
-                    if let Some(ref dev_tok) = dev_key_tok {
-                      let _ = increment_key_spend(&mut conn, dev_tok, cost_credits as f64).await;
+            actix_web::rt::spawn(async move {
+              match pool_inner.acquire().await {
+                Ok(mut conn) => {
+                  match attempt_wallet_deduction_decimal_else_common_web_error(
+                    &u_token,
+                    Some("openrouter_chat_token_spend"),
+                    cost_credits,
+                    &mut conn,
+                  )
+                  .await
+                  {
+                    Ok(_) => {
+                      info!(
+                        "Deducted {} credits from user '{}' on model '{}' (prompt: {}, completion: {})",
+                        cost_credits,
+                        u_token.as_str(),
+                        model_id,
+                        prompt_tokens,
+                        completion_tokens
+                      );
+                      if let Some(ref dev_tok) = dev_key_tok {
+                        let cost_f64 = cost_credits.to_f64().unwrap_or(0.0);
+                        let _ = increment_key_spend(&mut conn, dev_tok, cost_f64).await;
+                      }
+                    }
+                    Err(e) => {
+                      warn!(
+                        "Could not deduct {} credits for user '{}': {:?}",
+                        cost_credits,
+                        u_token.as_str(),
+                        e
+                      );
                     }
                   }
-                  Err(e) => {
-                    warn!(
-                      "Could not deduct {} credits for user '{}': {:?}",
-                      cost_credits,
-                      u_token.as_str(),
-                      e
-                    );
-                  }
+                }
+                Err(err) => {
+                  error!("Failed to acquire connection for chat billing: {:?}", err);
                 }
               }
-              Err(err) => {
-                error!("Failed to acquire connection for chat billing: {:?}", err);
-              }
-            }
-          });
+            });
+          }
         }
       }
 

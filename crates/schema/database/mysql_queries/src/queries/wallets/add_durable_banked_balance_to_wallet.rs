@@ -2,13 +2,13 @@ use crate::queries::wallet_ledger_entries::internal_insert_wallet_ledger_entry::
 use crate::queries::wallets::internal_select_wallet_balance_for_update::internal_select_wallet_balance_for_update;
 use crate::queries::wallets::wallet_update_summary::WalletUpdateSummary;
 use enums::by_table::wallet_ledger_entries::wallet_ledger_entry_type::WalletLedgerEntryType;
-use num_traits::ToPrimitive;
+use rust_decimal::Decimal;
 use sqlx::MySql;
 use tokens::tokens::wallets::WalletToken;
 
 pub async fn add_durable_banked_balance_to_wallet(
   wallet_token: &WalletToken,
-  amount_to_add: u64,
+  amount_to_add: Decimal,
   maybe_ledger_ref: Option<&str>,
   wallet_ledger_entry_type_override: Option<WalletLedgerEntryType>,
   transaction: &mut sqlx::Transaction<'_, MySql>,
@@ -20,10 +20,11 @@ pub async fn add_durable_banked_balance_to_wallet(
     transaction
   ).await?;
 
-  let existing_banked_balance = wallet.banked_credits;
-  let new_banked_balance = existing_banked_balance.saturating_add(amount_to_add);
+  let amount_to_add = amount_to_add.round_dp(2);
+  let existing_banked_balance = wallet.banked_credits.round_dp(2);
+  let new_banked_balance = (existing_banked_balance + amount_to_add).round_dp(2);
 
-  let result = sqlx::query!(
+  let _result = sqlx::query!(
         r#"
     UPDATE wallets
     SET
@@ -42,7 +43,7 @@ pub async fn add_durable_banked_balance_to_wallet(
     entry_type: wallet_ledger_entry_type_override.unwrap_or(WalletLedgerEntryType::CreditBanked),
     maybe_entity_ref: maybe_ledger_ref.map(|t| t.to_string()),
 
-    credits_delta: amount_to_add.to_i64().unwrap_or(0),
+    credits_delta: amount_to_add,
     
     // Updated banked credits
     banked_credits_before: existing_banked_balance,

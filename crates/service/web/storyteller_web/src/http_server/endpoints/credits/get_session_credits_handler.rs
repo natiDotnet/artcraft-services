@@ -71,21 +71,19 @@ pub async fn get_session_credits_handler(
     CommonWebError::from_error(err)
   })?;
 
-  let free_credits = 0u64;
+  let free_credits = rust_decimal::Decimal::ZERO;
 
   let monthly_credits = maybe_wallet
       .as_ref()
       .map(|w| w.monthly_credits)
-      .unwrap_or(0);
+      .unwrap_or(rust_decimal::Decimal::ZERO);
 
   let banked_credits = maybe_wallet
       .as_ref()
       .map(|w| w.banked_credits)
-      .unwrap_or(0);
+      .unwrap_or(rust_decimal::Decimal::ZERO);
 
-  let sum_total_credits = free_credits
-      .saturating_add(monthly_credits)
-      .saturating_add(banked_credits);
+  let sum_total_credits = (free_credits + monthly_credits + banked_credits).round_dp(2);
 
   Ok(Json(GetSessionCreditsResponse {
     success: true,

@@ -112,6 +112,39 @@ const CHAT_MODEL_FAMILIES: ChatModelFamilyDef[] = [
       /gemini/i.test(m.name) ||
       m.provider.toLowerCase().includes("google"),
   },
+  {
+    id: "nvidia",
+    name: "NVIDIA",
+    provider: "NVIDIA",
+    icon: <CpuIcon className="h-4 w-4 text-lime-400" />,
+    matches: (m) =>
+      m.family?.toLowerCase() === "nvidia" ||
+      m.id.startsWith("nvidia/") ||
+      /nemotron|nvidia/i.test(m.name) ||
+      m.provider.toLowerCase().includes("nvidia"),
+  },
+  {
+    id: "free_labs",
+    name: "Free AI Labs",
+    provider: "Community & Labs",
+    icon: <SparklesIcon className="h-4 w-4 text-emerald-400" />,
+    matches: (m) =>
+      m.family?.toLowerCase() === "inception" ||
+      m.family?.toLowerCase() === "respan" ||
+      m.family?.toLowerCase() === "liquid" ||
+      m.family?.toLowerCase() === "dots studio" ||
+      m.family?.toLowerCase() === "thinking machines" ||
+      m.family?.toLowerCase() === "poolside" ||
+      m.family?.toLowerCase() === "cohere" ||
+      m.id.startsWith("inception/") ||
+      m.id.startsWith("respan/") ||
+      m.id.startsWith("liquid/") ||
+      m.id.startsWith("dots-studio/") ||
+      m.id.startsWith("thinkingmachines/") ||
+      m.id.startsWith("poolside/") ||
+      m.id.startsWith("cohere/") ||
+      (m.badge === "Free" && !m.id.startsWith("nvidia/") && !m.id.startsWith("google/")),
+  },
 ];
 
 const EMPTY_REFS: RefImage[] = [];
@@ -400,21 +433,24 @@ export default function StudioChat() {
 
       const subItems: PopoverItem[] = familyModels.map((model) => {
         const isSelected = model.id === activeModel;
-        const price = model.price_per_1m_tokens_etb || 25;
+        const isFree = model.price_per_1m_tokens_etb === 0;
+        const price = model.price_per_1m_tokens_etb ?? 25;
         return {
           label: model.name,
           selected: isSelected,
           action: model.id,
-          description: `${price} ETB / 1M tokens (${
-            model.input_price_per_1m_etb || 18
-          } in / ${model.output_price_per_1m_etb || 35} out) • ${
-            model.description
-          }`,
+          description: isFree
+            ? `100% Free • ${model.description}`
+            : `${price} ETB / 1M tokens (${
+                model.input_price_per_1m_etb || 18
+              } in / ${model.output_price_per_1m_etb || 35} out) • ${
+                model.description
+              }`,
           icon: <SparklesIcon className="h-4 w-4 text-primary" />,
           badges: model.badge ? [{ label: model.badge }] : undefined,
           trailing: (
-            <span className="font-mono text-xs font-semibold text-amber-300">
-              {price} ETB
+            <span className={`font-mono text-xs font-semibold ${isFree ? "text-emerald-400" : "text-amber-300"}`}>
+              {isFree ? "Free" : `${price} ETB`}
             </span>
           ),
         };
@@ -428,7 +464,7 @@ export default function StudioChat() {
         selected: hasSelectedChild,
         icon: family.icon,
         description: hasSelectedChild && selectedChildModel
-          ? `${selectedChildModel.name} • ${selectedChildModel.price_per_1m_tokens_etb || 25} ETB / 1M`
+          ? `${selectedChildModel.name} • ${selectedChildModel.price_per_1m_tokens_etb === 0 ? "Free" : `${selectedChildModel.price_per_1m_tokens_etb || 25} ETB / 1M`}`
           : `${family.provider} • ${familyModels.length} ${familyModels.length === 1 ? "model" : "models"}`,
         trailing: (
           <span className="text-[11px] font-mono text-base-fg/50">
@@ -444,17 +480,20 @@ export default function StudioChat() {
     if (remainingModels.length > 0) {
       const otherSubItems: PopoverItem[] = remainingModels.map((model) => {
         const isSelected = model.id === activeModel;
-        const price = model.price_per_1m_tokens_etb || 25;
+        const isFree = model.price_per_1m_tokens_etb === 0;
+        const price = model.price_per_1m_tokens_etb ?? 25;
         return {
           label: model.name,
           selected: isSelected,
           action: model.id,
-          description: `${price} ETB / 1M • ${model.description}`,
+          description: isFree
+            ? `100% Free • ${model.description}`
+            : `${price} ETB / 1M • ${model.description}`,
           icon: <SparklesIcon className="h-4 w-4 text-primary" />,
           badges: model.badge ? [{ label: model.badge }] : undefined,
           trailing: (
-            <span className="font-mono text-xs font-semibold text-amber-300">
-              {price} ETB
+            <span className={`font-mono text-xs font-semibold ${isFree ? "text-emerald-400" : "text-amber-300"}`}>
+              {isFree ? "Free" : `${price} ETB`}
             </span>
           ),
         };
@@ -540,9 +579,9 @@ export default function StudioChat() {
   };
 
   const getModelPrice = (modelId?: string) => {
-    if (!modelId) return activeModelInfo.price_per_1m_tokens_etb || 25;
+    if (!modelId) return activeModelInfo.price_per_1m_tokens_etb ?? 25;
     const found = modelsList.find((m) => m.id === modelId);
-    return found?.price_per_1m_tokens_etb || 25;
+    return found?.price_per_1m_tokens_etb ?? 25;
   };
 
   return (
@@ -717,9 +756,15 @@ export default function StudioChat() {
                       <span className="truncate max-w-[130px] font-medium text-xs text-base-fg">
                         {activeModelInfo ? activeModelInfo.name : "Select Model"}
                       </span>
-                      <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-mono text-amber-300 shrink-0">
-                        {activeModelInfo.price_per_1m_tokens_etb || 25} ETB / 1M
-                      </span>
+                      {activeModelInfo?.price_per_1m_tokens_etb === 0 ? (
+                        <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-mono text-emerald-400 font-semibold shrink-0">
+                          Free
+                        </span>
+                      ) : (
+                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-mono text-amber-300 shrink-0">
+                          {activeModelInfo?.price_per_1m_tokens_etb ?? 25} ETB / 1M
+                        </span>
+                      )}
                       <ChevronDownIcon className="h-3 w-3 text-base-fg/50 shrink-0 ml-0.5" />
                     </>
                   )}

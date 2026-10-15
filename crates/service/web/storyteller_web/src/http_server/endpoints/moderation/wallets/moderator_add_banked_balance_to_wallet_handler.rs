@@ -66,7 +66,7 @@ pub async fn moderator_add_banked_balance_to_wallet_handler(
 
   let _result = add_durable_banked_balance_to_wallet(
     &path.wallet_token,
-    request.credits as u64,
+    rust_decimal::Decimal::from(request.credits),
     None,
     Some(WalletLedgerEntryType::StaffAddBanked),
     &mut transaction,

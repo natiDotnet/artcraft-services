@@ -18,12 +18,16 @@ pub struct ListUserWalletsResponse {
   pub wallets: Vec<ListUserWalletsEntry>,
 }
 
+use rust_decimal::Decimal;
+
 #[derive(Serialize, ToSchema)]
 pub struct ListUserWalletsEntry {
   pub token: WalletToken,
   pub wallet_namespace: PaymentsNamespace,
-  pub banked_credits: u32,
-  pub monthly_credits: u32,
+  #[schema(value_type = f64)]
+  pub banked_credits: Decimal,
+  #[schema(value_type = f64)]
+  pub monthly_credits: Decimal,
   pub version: i32,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,

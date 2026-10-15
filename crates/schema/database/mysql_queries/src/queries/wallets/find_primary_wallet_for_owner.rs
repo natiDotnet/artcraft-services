@@ -8,12 +8,14 @@ use sqlx::MySql;
 use tokens::tokens::users::UserToken;
 use tokens::tokens::wallets::WalletToken;
 
+use rust_decimal::Decimal;
+
 #[derive(Clone)]
 pub struct PrimaryWalletForOwner {
   pub token: WalletToken,
   pub namespace: PaymentsNamespace,
-  pub banked_credits: u64,
-  pub monthly_credits: u64,
+  pub banked_credits: Decimal,
+  pub monthly_credits: Decimal,
 }
 
 pub async fn find_primary_wallet_for_owner_using_connection(
@@ -74,8 +76,8 @@ fn query(user_token: &UserToken, namespace: PaymentsNamespace)
       SELECT
         token as `token: tokens::tokens::wallets::WalletToken`,
         wallet_namespace as `namespace: enums::common::payments_namespace::PaymentsNamespace`,
-        banked_credits,
-        monthly_credits
+        banked_credits as `banked_credits: Decimal`,
+        monthly_credits as `monthly_credits: Decimal`
       FROM wallets
       WHERE owner_user_token = ?
       AND wallet_namespace = ?
@@ -92,6 +94,6 @@ fn query(user_token: &UserToken, namespace: PaymentsNamespace)
 struct RecordRaw {
   token: WalletToken,
   namespace: PaymentsNamespace,
-  banked_credits: u64,
-  monthly_credits: u64,
+  banked_credits: Decimal,
+  monthly_credits: Decimal,
 }

@@ -314,6 +314,13 @@ export function TopBarActions({ className }: { className?: string }) {
   );
 }
 
+function formatCredits(c: number): string {
+  return Number(c).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 function CreditsChip({
   credits,
   onBuyCredits,
@@ -330,7 +337,7 @@ function CreditsChip({
       triggerIcon={<CoinsIcon className="text-primary text-[11px]" />}
       triggerLabel={
         <span className="whitespace-nowrap text-sm font-medium">
-          {credits.toLocaleString()} ETB
+          {formatCredits(credits)} ETB
         </span>
       }
       buttonClassName="h-8 px-3 ps-2.5 bg-transparent hover:bg-ui-controls border border-ui-border shadow-none text-base-fg/80 rounded-lg gap-1.5"
@@ -340,8 +347,8 @@ function CreditsChip({
         <div className="w-72 max-w-[calc(100vw-24px)] p-3 text-base-fg">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-base-fg/70">
-              Balance: {credits.toLocaleString()} Credits (
-              {credits.toLocaleString()} ETB)
+              Balance: {formatCredits(credits)} Credits (
+              {formatCredits(credits)} ETB)
             </span>
             <button
               className="text-sm font-medium text-primary hover:text-primary-300 transition-colors"
@@ -355,7 +362,7 @@ function CreditsChip({
           </div>
           <div className="flex items-center gap-2 text-3xl font-semibold text-base-fg tracking-tight">
             <CoinsIcon className="text-xl text-primary" />
-            {credits.toLocaleString()}
+            {formatCredits(credits)}
           </div>
           <div className="mt-3 flex gap-2">
             <Button

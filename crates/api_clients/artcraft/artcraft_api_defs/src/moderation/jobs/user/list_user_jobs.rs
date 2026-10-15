@@ -22,11 +22,14 @@ pub struct ListUserJobsResponse {
   pub jobs: Vec<ListUserJobsEntry>,
 }
 
+use rust_decimal::Decimal;
+
 #[derive(Serialize, ToSchema)]
 pub struct ListUserJobsEntry {
   pub job_status: JobStatusPlus,
   pub job_failure_reason: Option<String>,
-  pub credits_delta: Option<i32>,
+  #[schema(value_type = Option<f64>)]
+  pub credits_delta: Option<Decimal>,
   pub maybe_linked_refund_ledger_token: Option<WalletLedgerEntryToken>,
   pub on_success_result_media_token: Option<MediaFileToken>,
   pub job_token: InferenceJobToken,

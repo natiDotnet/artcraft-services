@@ -8,11 +8,13 @@ use errors::AnyhowResult;
 use tokens::tokens::users::UserToken;
 use tokens::tokens::wallets::WalletToken;
 
+use rust_decimal::Decimal;
+
 pub struct UserWalletForModerationResult {
   pub token: WalletToken,
   pub wallet_namespace: PaymentsNamespace,
-  pub banked_credits: u32,
-  pub monthly_credits: u32,
+  pub banked_credits: Decimal,
+  pub monthly_credits: Decimal,
   pub version: i32,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
@@ -28,8 +30,8 @@ pub async fn list_user_wallets_for_moderation(
 SELECT
     w.token as `token: tokens::tokens::wallets::WalletToken`,
     w.wallet_namespace as `wallet_namespace: enums::common::payments_namespace::PaymentsNamespace`,
-    w.banked_credits as `banked_credits: u32`,
-    w.monthly_credits as `monthly_credits: u32`,
+    w.banked_credits as `banked_credits: Decimal`,
+    w.monthly_credits as `monthly_credits: Decimal`,
     w.version,
     w.created_at as `created_at: DateTime<Utc>`,
     w.updated_at as `updated_at: DateTime<Utc>`

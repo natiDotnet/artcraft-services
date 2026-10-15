@@ -124,6 +124,7 @@ url.workspace = true
 
 # Money
 async-stripe = { version = "0.26.0", default-features = false, features = ["runtime-tokio-hyper-rustls", "connect", "billing", "checkout", "webhook-events"] }
+rust_decimal.workspace = true
 
 # Language tag parsing
 # TODO: Move to language support crate

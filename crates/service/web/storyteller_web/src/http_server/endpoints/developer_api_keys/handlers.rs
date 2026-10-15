@@ -115,7 +115,7 @@ pub async fn list_developer_api_keys_handler(
 
   let remaining_credits = primary_wallet
     .map(|w| w.banked_credits + w.monthly_credits)
-    .unwrap_or(0);
+    .unwrap_or(rust_decimal::Decimal::ZERO);
 
   let limit = query.limit.unwrap_or(50).min(200);
   let offset = query.offset.unwrap_or(0);
@@ -133,6 +133,8 @@ pub async fn list_developer_api_keys_handler(
   })?;
 
   let total_spend: f64 = keys.iter().map(|k| k.total_spend).sum();
+  use rust_decimal::prelude::ToPrimitive;
+  let remaining_credits_f64 = remaining_credits.to_f64().unwrap_or(0.0);
 
   Ok(Json(ListDeveloperApiKeysResponse {
     success: true,
@@ -140,7 +142,7 @@ pub async fn list_developer_api_keys_handler(
       api_keys: keys,
       user_total_litellm_spend: total_spend,
       remaining_credits,
-      max_budget: remaining_credits as f64 + total_spend,
+      max_budget: remaining_credits_f64 + total_spend,
     }),
     message: None,
   }))
@@ -168,7 +170,7 @@ pub async fn sync_developer_spend_handler(
 
   let remaining_credits = primary_wallet
     .map(|w| w.banked_credits + w.monthly_credits)
-    .unwrap_or(0);
+    .unwrap_or(rust_decimal::Decimal::ZERO);
 
   let keys = list_developer_keys(
     &mut *conn,
@@ -180,13 +182,15 @@ pub async fn sync_developer_spend_handler(
   .unwrap_or_default();
 
   let total_spend: f64 = keys.iter().map(|k| k.total_spend).sum();
+  use rust_decimal::prelude::ToPrimitive;
+  let remaining_credits_f64 = remaining_credits.to_f64().unwrap_or(0.0);
 
   Ok(Json(SyncDeveloperSpendResponse {
     success: true,
     user_total_litellm_spend: total_spend,
-    deducted_credits: 0,
+    deducted_credits: rust_decimal::Decimal::ZERO,
     remaining_credits,
-    max_budget: remaining_credits as f64 + total_spend,
+    max_budget: remaining_credits_f64 + total_spend,
     message: Some(format!(
       "Wallet balance: {} credits | Total API Spend: {:.2} ETB",
       remaining_credits, total_spend

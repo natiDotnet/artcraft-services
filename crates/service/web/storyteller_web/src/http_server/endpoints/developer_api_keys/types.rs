@@ -43,11 +43,14 @@ pub struct ListDeveloperApiKeysQueryParams {
   pub offset: Option<u32>,
 }
 
+use rust_decimal::Decimal;
+
 #[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
 pub struct ListDeveloperApiKeysData {
   pub api_keys: Vec<DeveloperApiKeyInfo>,
   pub user_total_litellm_spend: f64,
-  pub remaining_credits: u64,
+  #[schema(value_type = f64)]
+  pub remaining_credits: Decimal,
   pub max_budget: f64,
 }
 
@@ -75,8 +78,10 @@ pub struct DeleteDeveloperApiKeyResponse {
 pub struct SyncDeveloperSpendResponse {
   pub success: bool,
   pub user_total_litellm_spend: f64,
-  pub deducted_credits: u64,
-  pub remaining_credits: u64,
+  #[schema(value_type = f64)]
+  pub deducted_credits: Decimal,
+  #[schema(value_type = f64)]
+  pub remaining_credits: Decimal,
   pub max_budget: f64,
   #[serde(default)]
   pub message: Option<String>,

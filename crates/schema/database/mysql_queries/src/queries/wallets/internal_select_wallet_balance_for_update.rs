@@ -6,13 +6,15 @@ use enums::common::payments_namespace::PaymentsNamespace;
 use tokens::tokens::users::UserToken;
 use tokens::tokens::wallets::WalletToken;
 
+use rust_decimal::Decimal;
+
 pub (super) struct WalletForUpdate {
   pub token: WalletToken,
   pub namespace: PaymentsNamespace,
   pub owner_user_token: UserToken,
   
-  pub banked_credits: u64,
-  pub monthly_credits: u64,
+  pub banked_credits: Decimal,
+  pub monthly_credits: Decimal,
 }
 
 // NB: BE VERY CAREFUL WITH THIS FUNCTION! 
@@ -29,8 +31,8 @@ SELECT
   token as `token: tokens::tokens::wallets::WalletToken`,
   wallet_namespace as `namespace: enums::common::payments_namespace::PaymentsNamespace`,
   owner_user_token as `owner_user_token: tokens::tokens::users::UserToken`,
-  banked_credits,
-  monthly_credits
+  banked_credits as `banked_credits: Decimal`,
+  monthly_credits as `monthly_credits: Decimal`
 FROM wallets
 WHERE token = ?
 LIMIT 1
@@ -56,6 +58,6 @@ struct RawWalletForUpdate {
   namespace: PaymentsNamespace,
   owner_user_token: UserToken,
 
-  banked_credits: u64,
-  monthly_credits: u64,
+  banked_credits: Decimal,
+  monthly_credits: Decimal,
 }

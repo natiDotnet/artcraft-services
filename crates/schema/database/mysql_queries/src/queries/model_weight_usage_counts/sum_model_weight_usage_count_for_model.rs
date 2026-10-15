@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use num_traits::cast::ToPrimitive;
+use rust_decimal::Decimal;
 use sqlx::{Executor, MySql};
-use sqlx::types::BigDecimal;
 
 use errors::AnyhowResult;
 use tokens::tokens::model_weights::ModelWeightToken;
@@ -22,7 +22,7 @@ where E: 'e + Executor<'c, Database = MySql>
       RawUsageCount,
         r#"
 SELECT
-    sum(usage_count) as total_usage_count
+    sum(usage_count) as `total_usage_count?: Decimal`
 FROM
     model_weight_usage_counts
 WHERE
@@ -43,7 +43,6 @@ LIMIT 1
     }
   };
 
-  // TODO(bt,2024-09-07): It sucks that we have to use BigDecimal ...
   let count = result.total_usage_count
       .map(|count| count.to_u64())
       .flatten()
@@ -55,5 +54,5 @@ LIMIT 1
 }
 
 pub struct RawUsageCount {
-  total_usage_count: Option<BigDecimal>,
+  total_usage_count: Option<Decimal>,
 }

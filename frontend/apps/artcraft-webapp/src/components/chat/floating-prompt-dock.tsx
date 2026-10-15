@@ -97,7 +97,7 @@ export const FloatingPromptDock: React.FC<FloatingPromptDockProps> = ({
               }`}
             >
               <SparklesIcon className="h-3.5 w-3.5 text-primary" />
-              <span>Chat (1 ETB)</span>
+              <span>Chat</span>
             </button>
             <button
               type="button"
@@ -176,8 +176,14 @@ export const FloatingPromptDock: React.FC<FloatingPromptDockProps> = ({
                               {model.description}
                             </p>
                           </div>
-                          <span className="ml-2 text-[10px] font-mono text-amber-300/80 shrink-0">
-                            1 ETB
+                          <span className="ml-2 text-[10px] font-mono shrink-0">
+                            {model.price_per_1m_tokens_etb === 0 || model.cost_credits === 0 ? (
+                              <span className="font-semibold text-emerald-400">Free</span>
+                            ) : (
+                              <span className="text-amber-300/80">
+                                {model.price_per_1m_tokens_etb ? `${model.price_per_1m_tokens_etb.toFixed(2)} ETB/M` : "Per Token"}
+                              </span>
+                            )}
                           </span>
                         </button>
                       )}

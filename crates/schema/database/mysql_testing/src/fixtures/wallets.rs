@@ -57,7 +57,7 @@ pub async fn fund_wallet_banked(
   if credits > 0 {
     add_durable_banked_balance_to_wallet(
       &wallet_token,
-      credits,
+      rust_decimal::Decimal::from(credits),
       Some("mysql_testing fixture"),
       None,
       &mut transaction,

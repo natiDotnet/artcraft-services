@@ -92,7 +92,7 @@ async fn try_temporary_test_wallet_deduction_with_transaction(
 
   let result = try_to_spend_wallet_balance(
     &wallet_token, 
-    amount_to_deduct, 
+    rust_decimal::Decimal::from(amount_to_deduct), 
     maybe_reference_token, 
     transaction
   ).await;

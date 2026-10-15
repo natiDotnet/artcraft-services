@@ -25,6 +25,7 @@ tokens.workspace = true
 
 # External
 chrono.workspace = true
+rust_decimal.workspace = true
 url.workspace = true
 
 # Serialization
