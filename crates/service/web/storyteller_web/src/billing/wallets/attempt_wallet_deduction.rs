@@ -12,6 +12,8 @@ use tokens::tokens::users::UserToken;
 use tokens::tokens::wallet_ledger_entries::WalletLedgerEntryToken;
 use tokens::tokens::wallets::WalletToken;
 
+use super::generation_pricing::scale_non_chat_credits;
+
 pub struct WalletDeductionResult {
   pub wallet_token: WalletToken,
   pub ledger_entry_token: WalletLedgerEntryToken,
@@ -24,10 +26,19 @@ pub async fn attempt_wallet_deduction_else_common_web_error(
   connection: &mut PoolConnection<MySql>
 ) -> Result<WalletDeductionResult, CommonWebError> {
 
+  // Chat token pricing is already in 1 Credit = 1 ETB format and is not scaled.
+  // Non-chat generative jobs (image, video, audio, 3D mesh, splat) have their USD-cent base costs
+  // scaled by the centralized multiplier (default 2x).
+  let final_amount = if maybe_reference_token == Some("openrouter_chat_token_spend") {
+    amount_to_deduct
+  } else {
+    scale_non_chat_credits(amount_to_deduct)
+  };
+
   let result = try_wallet_deduction(
     user_token,
     maybe_reference_token,
-    amount_to_deduct,
+    final_amount,
     connection
   ).await;
 

@@ -43,7 +43,7 @@ pub async fn omni_gen_splat_cost_handler(
 
   Ok(Json(OmniGenSplatCostResponse {
     success: true,
-    cost_in_credits: estimate.cost_in_credits,
+    cost_in_credits: crate::billing::wallets::generation_pricing::scale_non_chat_credits_opt(estimate.cost_in_credits),
     cost_in_usd_cents: estimate.cost_in_usd_cents,
     is_free: estimate.is_free,
     is_unlimited: estimate.is_unlimited,
