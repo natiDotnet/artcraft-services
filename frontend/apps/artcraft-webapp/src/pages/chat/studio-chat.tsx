@@ -143,7 +143,7 @@ const CHAT_MODEL_FAMILIES: ChatModelFamilyDef[] = [
       m.id.startsWith("thinkingmachines/") ||
       m.id.startsWith("poolside/") ||
       m.id.startsWith("cohere/") ||
-      (m.badge === "Free" && !m.id.startsWith("nvidia/") && !m.id.startsWith("google/")),
+      (m.badge === "Free" && !m.id.startsWith("nvidia/") && !m.id.startsWith("google/") && !m.id.startsWith("fish-audio/")),
   },
 ];
 

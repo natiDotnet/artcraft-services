@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FilterMediaClasses } from "@storyteller/api";
 import type { OmniGenAudioModelDetails } from "@storyteller/api";
 import { PopoverMenu, type PopoverItem } from "@storyteller/ui-popover";
 import { Tooltip } from "@storyteller/ui-tooltip";
 import { Button, ToggleButton } from "@storyteller/ui-button";
 import { SliderV2 } from "@storyteller/ui-sliderv2";
-import { GalleryModal, type GalleryItem } from "@storyteller/ui-gallery-modal";
+import { GalleryModal, type GalleryItem as PickerGalleryItem } from "@storyteller/ui-gallery-modal";
 import {
   AudioTuningPopover,
   SoundsSettingsPopover,
@@ -43,6 +43,7 @@ import {
   usePromptHeight,
   useLightboxNav,
   CreateMediaPageShell,
+  type GalleryItem,
 } from "../../components/generation-gallery";
 import { Lightbox } from "../../components/lightbox/lightbox";
 import { useCreateAudioStore } from "./create-audio-store";
@@ -65,9 +66,127 @@ import {
 import { toast } from "../../components/toast/toast";
 import { useSignupCta } from "../../components/signup-cta-modal";
 import { useInsufficientCredits } from "../../components/insufficient-credits-modal";
-import { MicIcon, MicOffIcon, RepeatIcon, SparklesIcon } from "lucide-react";
+import { MediaUploadApi } from "@storyteller/api";
+import { MicIcon, MicOffIcon, PauseIcon, PlayIcon, RepeatIcon, SparklesIcon, Volume2Icon } from "lucide-react";
 
 // ── Constants ────────────────────────────────────────────────────────────
+
+export const FISH_AUDIO_TTS_MODEL_ID = "fish-audio/s2.1-pro-free:free";
+
+export interface FishAudioVoice {
+  id: string;
+  name: string;
+  gender: "female" | "male";
+  description: string;
+  tags: string[];
+  sampleAudio: string;
+}
+
+export const FISH_AUDIO_VOICES: FishAudioVoice[] = [
+  {
+    id: "9a9cf47702da476aa4629e2506d4a857",
+    name: "Hannah",
+    gender: "female",
+    description: "A conversation specialist.",
+    tags: ["Female", "Conversational", "Friendly"],
+    sampleAudio: "https://platform.r2.fish.audio/task/08d658835feb427db808e37060b78eb0.mp3",
+  },
+  {
+    id: "bf322df2096a46f18c579d0baa36f41d",
+    name: "Adrian",
+    gender: "male",
+    description: "A steady and reliable narrator.",
+    tags: ["Male", "Narration", "Storytelling"],
+    sampleAudio: "https://platform.r2.fish.audio/task/d730b09f4a484316a77ecc86137e85fb.mp3",
+  },
+  {
+    id: "933563129e564b19a115bedd57b7406a",
+    name: "Sarah",
+    gender: "female",
+    description: "An engaged speaker.",
+    tags: ["Female", "Soft", "Sincere"],
+    sampleAudio: "https://platform.r2.fish.audio/task/4e204945670c460c86fdab57512cb308.mp3",
+  },
+  {
+    id: "536d3a5e000945adb7038665781a4aca",
+    name: "Ethan",
+    gender: "male",
+    description: "A curious explainer.",
+    tags: ["Male", "Educational", "Clear"],
+    sampleAudio: "https://platform.r2.fish.audio/task/bdd677ed767744fc91f166468786264b.mp3",
+  },
+  {
+    id: "e3cd384158934cc9a01029cd7d278634",
+    name: "Laura",
+    gender: "female",
+    description: "A confident female narrator.",
+    tags: ["Female", "Warm", "Professional"],
+    sampleAudio: "https://platform.r2.fish.audio/task/e821bef995344d519caa1c93d808db23.mp3",
+  },
+  {
+    id: "79d0bd3e4e5444b18f7b6d89b5927bf1",
+    name: "Jordan",
+    gender: "male",
+    description: "A motivational speaker.",
+    tags: ["Male", "Motivational", "Measured"],
+    sampleAudio: "https://platform.r2.fish.audio/task/edecbc0bdd4c46c39eda8520a0f729ef.mp3",
+  },
+  {
+    id: "b347db033a6549378b48d00acb0d06cd",
+    name: "Selene",
+    gender: "female",
+    description: "A meditative female voice.",
+    tags: ["Female", "Calm", "ASMR"],
+    sampleAudio: "https://platform.r2.fish.audio/task/fcf629b4a0b343558f461338ba1b9da4.mp3",
+  },
+];
+
+function buildVoicePopoverItems(
+  selectedVoiceId: string,
+  playingVoiceId: string | null,
+  onTogglePreview: (e: React.MouseEvent, voice: FishAudioVoice) => void,
+): PopoverItem[] {
+  return FISH_AUDIO_VOICES.map((v) => {
+    const isPlaying = playingVoiceId === v.id;
+    return {
+      label: v.name,
+      selected: v.id === selectedVoiceId,
+      description: v.description,
+      badges: [
+        { label: v.gender === "female" ? "Female" : "Male" },
+        ...v.tags.slice(1).map((tag) => ({ label: tag })),
+      ],
+      action: v.id,
+      icon: <Volume2Icon className="h-4 w-4 text-emerald-400" />,
+      trailing: (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePreview(e, v);
+          }}
+          className="flex items-center justify-center h-7 w-7 rounded-full bg-white/5 hover:bg-white/15 text-neutral-300 hover:text-white transition-colors"
+          title={isPlaying ? "Pause sample" : "Play sample audio"}
+        >
+          {isPlaying ? (
+            <PauseIcon className="h-3.5 w-3.5 text-emerald-400" />
+          ) : (
+            <PlayIcon className="h-3.5 w-3.5" />
+          )}
+        </button>
+      ),
+    };
+  });
+}
+
+const FISH_AUDIO_MODEL_DETAILS: OmniGenAudioModelDetails = {
+  model: FISH_AUDIO_TTS_MODEL_ID,
+  model_creator: "fish_audio",
+  full_name: "Fish Audio S2.1 Pro (Free)",
+  extra_info_short: "Ultra-fast text-to-speech voice generation (100% Free)",
+  text_prompt_supported: true,
+  speed_supported: true,
+};
 
 const DEFAULT_MODEL_ID = "suno_music";
 
@@ -95,20 +214,28 @@ function buildModelPopoverItems(
   selectedId: string,
 ): PopoverItem[] {
   _modelLookup = new Map(models.map((m) => [m.model, m]));
-  return models.map((model) => ({
-    label: model.full_name || model.model,
-    selected: model.model === selectedId,
-    description: getModelDescription(model.model, model.extra_info_short),
-    info: getModelInfo(model.model, model.extra_info) || undefined,
-    icon: (
-      <img
-        src={getCreatorIconPathForModelId(model.model)}
-        alt={`${model.model} logo`}
-        className="h-4 w-4 icon-auto-contrast"
-      />
-    ),
-    action: model.model, // use action to carry the model id
-  }));
+  return models.map((model) => {
+    const isFishAudio = model.model === FISH_AUDIO_TTS_MODEL_ID;
+    return {
+      label: model.full_name || model.model,
+      selected: model.model === selectedId,
+      description: isFishAudio
+        ? "Ultra-fast text-to-speech voice generation (100% Free)"
+        : getModelDescription(model.model, model.extra_info_short),
+      info: getModelInfo(model.model, model.extra_info) || undefined,
+      badges: isFishAudio ? [{ label: "Free" }] : undefined,
+      icon: isFishAudio ? (
+        <Volume2Icon className="h-4 w-4 text-emerald-400" />
+      ) : (
+        <img
+          src={getCreatorIconPathForModelId(model.model)}
+          alt={`${model.model} logo`}
+          className="h-4 w-4 icon-auto-contrast"
+        />
+      ),
+      action: model.model, // use action to carry the model id
+    };
+  });
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -122,21 +249,25 @@ export default function CreateAudio() {
   // Fetch models from API
   const { models: apiModels } = useOmniGenAudioModels();
 
+  const allModels = useMemo((): OmniGenAudioModelDetails[] => {
+    return [...apiModels, FISH_AUDIO_MODEL_DETAILS];
+  }, [apiModels]);
+
   // UI state
   const ui = useCreateAudioStore((s) => s.ui);
   const setUi = useCreateAudioStore((s) => s.setUi);
 
   const selectedModel = useMemo((): OmniGenAudioModelDetails | undefined => {
-    if (!apiModels.length) return undefined;
+    if (!allModels.length) return undefined;
     if (ui.selectedModelId) {
       return (
-        apiModels.find((m) => m.model === ui.selectedModelId) ??
-        apiModels.find((m) => m.model === DEFAULT_MODEL_ID) ??
-        apiModels[0]
+        allModels.find((m) => m.model === ui.selectedModelId) ??
+        allModels.find((m) => m.model === DEFAULT_MODEL_ID) ??
+        allModels[0]
       );
     }
-    return apiModels.find((m) => m.model === DEFAULT_MODEL_ID) ?? apiModels[0];
-  }, [apiModels, ui.selectedModelId]);
+    return allModels.find((m) => m.model === DEFAULT_MODEL_ID) ?? allModels[0];
+  }, [allModels, ui.selectedModelId]);
 
   const prompt = ui.prompt;
   const setPrompt = useCallback((v: string) => setUi({ prompt: v }), [setUi]);
@@ -220,6 +351,58 @@ export default function CreateAudio() {
     [maxImageRefs],
   );
 
+  const isFishAudio = selectedModel?.model === FISH_AUDIO_TTS_MODEL_ID;
+  const [localCompletedItems, setLocalCompletedItems] = useState<GalleryItem[]>([]);
+  const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
+  const sampleAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleToggleVoiceSample = useCallback(
+    (e: React.MouseEvent, voice: FishAudioVoice) => {
+      e.stopPropagation();
+      if (playingVoiceId === voice.id) {
+        sampleAudioRef.current?.pause();
+        setPlayingVoiceId(null);
+      } else {
+        if (sampleAudioRef.current) {
+          sampleAudioRef.current.pause();
+        }
+        const audio = new Audio(voice.sampleAudio);
+        audio.onended = () => setPlayingVoiceId(null);
+        audio.onerror = () => setPlayingVoiceId(null);
+        audio.play().catch(() => setPlayingVoiceId(null));
+        sampleAudioRef.current = audio;
+        setPlayingVoiceId(voice.id);
+      }
+    },
+    [playingVoiceId],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (sampleAudioRef.current) {
+        sampleAudioRef.current.pause();
+        sampleAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  const voiceItems = useMemo(
+    () =>
+      buildVoicePopoverItems(
+        ui.selectedVoiceId,
+        playingVoiceId,
+        handleToggleVoiceSample,
+      ),
+    [ui.selectedVoiceId, playingVoiceId, handleToggleVoiceSample],
+  );
+
+  const selectedVoice = useMemo(
+    () =>
+      FISH_AUDIO_VOICES.find((v) => v.id === ui.selectedVoiceId) ??
+      FISH_AUDIO_VOICES[0],
+    [ui.selectedVoiceId],
+  );
+
   // Jobs + gallery
   const jobs = useGenerationJobs({ mediaType: "audio", enabled: !!user });
   const gallery = useGalleryData({
@@ -229,8 +412,11 @@ export default function CreateAudio() {
   });
 
   const newlyCompletedTokens = useMemo(
-    () => new Set(jobs.newlyCompleted.map((i) => i.id)),
-    [jobs.newlyCompleted],
+    () => new Set([
+      ...jobs.newlyCompleted.map((i) => i.id),
+      ...localCompletedItems.map((i) => i.id),
+    ]),
+    [jobs.newlyCompleted, localCompletedItems],
   );
 
   // Lightbox
@@ -238,8 +424,8 @@ export default function CreateAudio() {
     const filtered = gallery.items.filter(
       (i) => !newlyCompletedTokens.has(i.id),
     );
-    return [...jobs.newlyCompleted, ...filtered];
-  }, [jobs.newlyCompleted, gallery.items, newlyCompletedTokens]);
+    return [...localCompletedItems, ...jobs.newlyCompleted, ...filtered];
+  }, [localCompletedItems, jobs.newlyCompleted, gallery.items, newlyCompletedTokens]);
 
   const lightbox = useLightboxNav(flatItems);
 
@@ -250,12 +436,15 @@ export default function CreateAudio() {
     sampleRateHz: sampleRateOptions?.length ? sampleRateHz : undefined,
   });
 
+  const displayCredits = isFishAudio ? 0 : estimatedCredits;
+
   const modelItems = useMemo(
-    () => buildModelPopoverItems(apiModels, selectedModel?.model ?? ""),
-    [apiModels, selectedModel?.model],
+    () => buildModelPopoverItems(allModels, selectedModel?.model ?? ""),
+    [allModels, selectedModel?.model],
   );
 
   const hasContent =
+    localCompletedItems.length > 0 ||
     jobs.inProgress.length > 0 ||
     jobs.failed.length > 0 ||
     jobs.newlyCompleted.length > 0 ||
@@ -325,7 +514,7 @@ export default function CreateAudio() {
   );
 
   const handleLibraryAudioSelect = useCallback(
-    async (items: GalleryItem[]) => {
+    async (items: PickerGalleryItem[]) => {
       setIsAudioPickerOpen(false);
       const availableSlots = Math.max(0, maxAudioRefs - referenceAudios.length);
       const picked = items.slice(0, availableSlots);
@@ -366,7 +555,7 @@ export default function CreateAudio() {
   );
 
   const handleLibraryImageSelect = useCallback(
-    (items: GalleryItem[]) => {
+    (items: PickerGalleryItem[]) => {
       const newImages: RefImage[] = items
         .slice(0, maxImageRefs)
         .map((item) => ({
@@ -411,6 +600,94 @@ export default function CreateAudio() {
       toast.error(
         `${selectedModel.full_name ?? "This model"} needs an audio track to work from — add one first`,
       );
+      return;
+    }
+
+    if (isFishAudio) {
+      setIsGenerating(true);
+      try {
+        let response = await fetch("/v1/audio/speech", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: FISH_AUDIO_TTS_MODEL_ID,
+            input: prompt.trim(),
+            voice: ui.selectedVoiceId || "b347db033a6549378b48d00acb0d06cd",
+            response_format: "mp3",
+            speed: hasSpeed ? speed : undefined,
+          }),
+        });
+
+        // Transient 503 retry (e.g. if free model is waking up)
+        if (!response.ok && response.status === 503) {
+          await new Promise((r) => setTimeout(r, 1200));
+          response = await fetch("/v1/audio/speech", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: FISH_AUDIO_TTS_MODEL_ID,
+              input: prompt.trim(),
+              voice: ui.selectedVoiceId || "b347db033a6549378b48d00acb0d06cd",
+              response_format: "mp3",
+              speed: hasSpeed ? speed : undefined,
+            }),
+          });
+        }
+
+        if (!response.ok) {
+          let errMessage = "Speech generation failed";
+          try {
+            const errData = await response.json();
+            errMessage = errData.message || errData.error_message || errMessage;
+          } catch {}
+          toast.error(errMessage);
+          setIsGenerating(false);
+          return;
+        }
+
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        audio.play().catch(() => {});
+
+        let mediaToken: string | undefined;
+        try {
+          const uploadRes = await new MediaUploadApi().UploadAudio({
+            blob,
+            fileName: `speech-${Date.now()}.mp3`,
+            uuid: crypto.randomUUID(),
+            maybe_title: prompt.trim().slice(0, 100),
+          });
+          if (uploadRes.success && uploadRes.data) {
+            mediaToken = uploadRes.data;
+          }
+        } catch (uploadErr) {
+          console.error("Audio upload error:", uploadErr);
+        }
+
+        const newItem: GalleryItem = {
+          id: mediaToken || `speech-${Date.now()}`,
+          label: prompt.trim().slice(0, 50),
+          thumbnail: null,
+          fullImage: audioUrl,
+          createdAt: new Date().toISOString(),
+          mediaClass: "audio",
+          modelId: FISH_AUDIO_TTS_MODEL_ID,
+        };
+
+        setLocalCompletedItems((prev) => [newItem, ...prev]);
+        toast.success("Speech generated successfully!");
+        window.dispatchEvent(new Event("task-queue-update"));
+        window.dispatchEvent(new Event("credits-change"));
+      } catch (err: any) {
+        toast.error(err?.message || "Failed to generate speech");
+      } finally {
+        setIsGenerating(false);
+      }
       return;
     }
 
@@ -482,6 +759,9 @@ export default function CreateAudio() {
     pitch,
     referenceAudios,
     referenceImages,
+    isFishAudio,
+    hasSpeed,
+    ui.selectedVoiceId,
   ]);
 
   // ── Toolbar pieces (shared between desktop promptbox + fullscreen) ────
@@ -544,16 +824,40 @@ export default function CreateAudio() {
 
   const leftToolbar = (
     <>
-      {toggleButtons}
-      {(hasBpm || hasMusicalKey) && (
-        <SoundsSettingsPopover
-          showBpm={hasBpm}
-          bpm={ui.bpm}
-          onBpmChange={(bpm) => setUi({ bpm })}
-          showMusicalKey={hasMusicalKey}
-          musicalKey={ui.musicalKey}
-          onMusicalKeyChange={(musicalKey) => setUi({ musicalKey })}
+      {isFishAudio ? (
+        <PopoverMenu
+          items={voiceItems}
+          onSelect={(item) => {
+            if (item.action) setUi({ selectedVoiceId: item.action });
+          }}
+          mode="toggle"
+          panelTitle="Voice Choices"
+          panelClassName="w-[340px]"
+          richList
+          renderTrigger={() => (
+            <button
+              type="button"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-[3px] border border-ui-controls-border bg-ui-controls hover:bg-ui-controls/80 text-foreground transition-colors"
+            >
+              <Volume2Icon className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Voice: {selectedVoice.name}</span>
+            </button>
+          )}
         />
+      ) : (
+        <>
+          {toggleButtons}
+          {(hasBpm || hasMusicalKey) && (
+            <SoundsSettingsPopover
+              showBpm={hasBpm}
+              bpm={ui.bpm}
+              onBpmChange={(bpm) => setUi({ bpm })}
+              showMusicalKey={hasMusicalKey}
+              musicalKey={ui.musicalKey}
+              onMusicalKeyChange={(musicalKey) => setUi({ musicalKey })}
+            />
+          )}
+        </>
       )}
       {hasTuning && (
         <AudioTuningPopover
@@ -618,8 +922,12 @@ export default function CreateAudio() {
       onPromptChange={setPrompt}
       onSubmit={handleGenerate}
       isSubmitting={isGenerating}
-      credits={estimatedCredits}
-      placeholder="Describe the music or sound you want..."
+      credits={displayCredits}
+      placeholder={
+        isFishAudio
+          ? "Enter text to convert to speech..."
+          : "Describe the music or sound you want..."
+      }
       autoAdvance={loggedIn && canGenerate}
       modelField={
         <MobileSelectField
@@ -642,6 +950,16 @@ export default function CreateAudio() {
       mediaRefs={audioReferenceRow}
       settingsFields={
         <>
+          {isFishAudio && (
+            <MobileSelectField
+              label="Voice"
+              title="Select Voice"
+              items={voiceItems}
+              onSelect={(item) => {
+                if (item.action) setUi({ selectedVoiceId: item.action });
+              }}
+            />
+          )}
           {styleSupported && (
             <div className="rounded-[3px] border border-ui-panel-border bg-ui-controls px-3 py-1.5">
               <StylePromptRow
@@ -802,7 +1120,7 @@ export default function CreateAudio() {
           inProgressJobs={jobs.inProgress}
           failedJobs={jobs.failed}
           onDismissFailed={jobs.dismissFailed}
-          newlyCompletedItems={jobs.newlyCompleted}
+          newlyCompletedItems={[...localCompletedItems, ...jobs.newlyCompleted]}
           galleryItems={gallery.items}
           newlyCompletedTokens={newlyCompletedTokens}
           hasMore={gallery.hasMore}
@@ -827,8 +1145,12 @@ export default function CreateAudio() {
             onSubmit={handleGenerate}
             isSubmitting={isGenerating}
             disabled={!canGenerate}
-            credits={estimatedCredits}
-            placeholder="Describe the music or sound you want..."
+            credits={displayCredits}
+            placeholder={
+              isFishAudio
+                ? "Enter text to convert to speech..."
+                : "Describe the music or sound you want..."
+            }
             supportsImagePrompts={imageRefsSupported}
             maxImagePromptCount={maxImageRefs}
             referenceImages={referenceImages}

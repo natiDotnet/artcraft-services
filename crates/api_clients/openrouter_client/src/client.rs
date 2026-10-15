@@ -138,4 +138,39 @@ impl OpenRouterClient {
 
     Ok(response.bytes_stream())
   }
+
+  /// Sends a text-to-speech / audio speech request and returns an asynchronous raw audio byte stream and content type.
+  pub async fn stream_speech(
+    &self,
+    request: &serde_json::Value,
+  ) -> Result<(impl Stream<Item = reqwest::Result<Bytes>>, String), OpenRouterError> {
+    let headers = self.build_headers()?;
+    let url = format!("{}/audio/speech", self.base_url.trim_end_matches('/'));
+
+    let response = self
+      .client
+      .post(&url)
+      .headers(headers)
+      .json(request)
+      .send()
+      .await?;
+
+    let status = response.status();
+    if !status.is_success() {
+      let error_text = response.text().await.unwrap_or_default();
+      return Err(OpenRouterError::Api {
+        status_code: status.as_u16(),
+        message: error_text,
+      });
+    }
+
+    let content_type = response
+      .headers()
+      .get(reqwest::header::CONTENT_TYPE)
+      .and_then(|v| v.to_str().ok())
+      .unwrap_or("audio/mpeg")
+      .to_string();
+
+    Ok((response.bytes_stream(), content_type))
+  }
 }

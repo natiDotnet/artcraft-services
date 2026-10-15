@@ -199,6 +199,10 @@ export const getModelDisplayName = (
 
     // Beeble (Background Change / VFX)
     switch_x: "Beeble SwitchX",
+
+    // Fish Audio (Voice / TTS)
+    "fish-audio/s2.1-pro-free:free": "Fish Audio S2.1 Pro",
+    "fish-audio/s2_1-pro-free:free": "Fish Audio S2.1 Pro",
   };
 
   const key = normalizeModelKey(modelType);

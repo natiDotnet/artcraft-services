@@ -144,6 +144,14 @@ pub const SUPPORTED_CHAT_MODELS: &[(&str, &str, ModelPricing)] = &[
     },
   ),
   (
+    "fish-audio/s2.1-pro-free:free",
+    "fish-audio",
+    ModelPricing {
+      input_per_million: 0.0,
+      output_per_million: 0.0,
+    },
+  ),
+  (
     "inception/mercury-decide:free",
     "inception",
     ModelPricing {

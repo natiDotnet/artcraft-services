@@ -260,6 +260,7 @@ pub async fn list_chat_models_handler() -> Json<ListChatModelsResponse> {
         description: "Advanced conversational reasoning with high context efficiency (123 ETB / 1M tokens)".to_string(),
       },
 
+
       // --- NVIDIA (Free) ---
       ChatModelInfo {
         id: "nvidia/nemotron-3.5-super-vl:free".to_string(),

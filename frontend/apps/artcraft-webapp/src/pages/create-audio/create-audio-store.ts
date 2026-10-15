@@ -19,7 +19,11 @@ export type AudioUiState = {
   speed: number;
   volume: number;
   pitch: number;
+  // Fish Audio TTS voice selection
+  selectedVoiceId: string;
 };
+
+export const FISH_AUDIO_DEFAULT_VOICE_ID = "b347db033a6549378b48d00acb0d06cd";
 
 type CreateAudioState = {
   ui: AudioUiState;
@@ -44,6 +48,7 @@ const DEFAULT_UI: AudioUiState = {
   speed: 1,
   volume: 1,
   pitch: 0,
+  selectedVoiceId: FISH_AUDIO_DEFAULT_VOICE_ID,
 };
 
 export const useCreateAudioStore = create<CreateAudioState>()(
