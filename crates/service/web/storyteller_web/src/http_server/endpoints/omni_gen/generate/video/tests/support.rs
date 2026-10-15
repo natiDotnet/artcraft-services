@@ -58,7 +58,7 @@ use crate::http_server::web_utils::scoped_temp_dir_creator::ScopedTempDirCreator
 use crate::http_server::web_utils::web_opaque_cursor_encoder_v2::WebOpaqueCursorEncoderV2;
 use crate::http_server::web_utils::web_sort_key_crypto::WebSortKeyCrypto;
 use crate::startup::setup_inference_providers::{
-  BeebleData, FalData, GmiCloudData, GrokApiData, InferenceProviders, KinoviWebData, LiteLlmData,
+  BeebleData, FalData, GmiCloudData, GrokApiData, InferenceProviders, KinoviWebData,
   OpenAiData, OpenRouterData, WorldLabsData,
 };
 use crate::startup::setup_pager::build_pager;
@@ -712,12 +712,6 @@ pub(crate) fn build_test_server_state(pool: MySqlPool, media_cdn_override_url: S
         default_model: "deepseek/deepseek-v4-flash-0731".to_string(),
         site_url: "http://localhost".to_string(),
         app_name: "ArtCraft Test".to_string(),
-      },
-      litellm: LiteLlmData {
-        api_key: "test".to_string(),
-        base_url: "http://localhost:4000".to_string(),
-        default_model: "gpt-4o-mini".to_string(),
-        master_key: "test".to_string(),
       },
     },
     resend: ResendData { api_key: "test".to_string() },
