@@ -13,7 +13,9 @@ import {
   CpuIcon,
   BoxesIcon,
   GemIcon,
+  Code2Icon,
 } from "lucide-react";
+import { DeveloperModeModal } from "./components/DeveloperModeModal";
 import {
   CreateMediaPageShell,
   useAuthCheck,
@@ -306,12 +308,13 @@ function renderFormattedMarkdown(text: string) {
 }
 
 export default function StudioChat() {
-  const { authChecked } = useAuthCheck();
+  const { user, authChecked } = useAuthCheck();
   const { loggedIn, openSignupCta } = useSignupCta();
   const openInsufficientCredits = useInsufficientCredits();
   const { promptBoxRef, promptHeight } = usePromptHeight();
 
   const [inputPrompt, setInputPrompt] = useState("");
+  const [devModeOpen, setDevModeOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Listen for insufficient credits event dispatched by chat-store
@@ -775,6 +778,24 @@ export default function StudioChat() {
                     </button>
                   </Tooltip>
                 )}
+
+                {/* Developer Mode & API */}
+                <Tooltip content="Developer Mode & API" position="top">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!loggedIn) {
+                        openSignupCta();
+                      } else {
+                        setDevModeOpen(true);
+                      }
+                    }}
+                    className="flex h-[34px] items-center gap-1.5 px-2.5 rounded-[3px] border border-ui-controls-border bg-ui-controls text-xs font-medium text-base-fg hover:bg-ui-controls-hover hover:text-white transition-colors"
+                  >
+                    <Code2Icon className="h-4 w-4 text-primary" />
+                    <span className="hidden sm:inline">Developer</span>
+                  </button>
+                </Tooltip>
               </div>
             }
             rightToolbar={
@@ -799,7 +820,16 @@ export default function StudioChat() {
           </div>
         </div>
       }
-      modals={<SignupCtaModal />}
+      modals={
+        <>
+          <SignupCtaModal />
+          <DeveloperModeModal
+            isOpen={devModeOpen}
+            onClose={() => setDevModeOpen(false)}
+            user={user ?? null}
+          />
+        </>
+      }
     />
   );
 }

@@ -152,3 +152,4 @@ volumes:
   redis-data:
   elasticsearch-data:
   seaweedfs-data:
+

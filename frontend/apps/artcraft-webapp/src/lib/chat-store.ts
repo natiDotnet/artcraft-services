@@ -19,6 +19,16 @@ export interface ChatSession {
   model: string;
 }
 
+export interface ToolCallExecution {
+  id: string;
+  name: "generate_image" | "generate_video" | string;
+  status: "idle" | "queued" | "running" | "completed" | "failed";
+  prompt: string;
+  aspectRatio?: string;
+  resultUrls?: string[];
+  error?: string;
+}
+
 interface ChatState {
   sessions: ChatSession[];
   activeSessionId: string;
@@ -41,6 +51,14 @@ interface ChatState {
   sendMessage: (content: string) => Promise<void>;
   stopStreaming: () => void;
   clearActiveSessionMessages: () => void;
+
+  // Media Tool Calls
+  executeToolCall: (messageId: string) => void;
+  generateDirectMedia: (
+    type: "image" | "video",
+    prompt: string,
+    options?: { aspectRatio?: string; duration?: number }
+  ) => void;
 }
 
 export const DEFAULT_CHAT_MODELS: ChatModelDto[] = [
@@ -542,5 +560,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         window.dispatchEvent(new CustomEvent("artcraft:insufficient-credits"));
       }
     }
+  },
+
+  executeToolCall: (_messageId: string) => {
+    // Stub for direct media generation tool calls
+  },
+
+  generateDirectMedia: (
+    _type: "image" | "video",
+    _prompt: string,
+    _options?: { aspectRatio?: string; duration?: number }
+  ) => {
+    // Stub for direct media generation
   },
 }));

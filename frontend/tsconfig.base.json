@@ -29,6 +29,9 @@
       ],
       "@storyteller/markdown-content": [
         "libs/markdown-content/src/index.ts"
+      ],
+      "@storyteller/ui-pricing-table": [
+        "libs/components/pricing-table/src/index.ts"
       ]
     }
   }

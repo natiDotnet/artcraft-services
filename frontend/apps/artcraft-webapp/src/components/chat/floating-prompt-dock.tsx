@@ -8,11 +8,9 @@ import {
   ImageIcon,
   VideoIcon,
   PlusIcon,
-  SlidersHorizontalIcon,
 } from "lucide-react";
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from "@headlessui/react";
 import { useChatStore } from "../../lib/chat-store";
-import { toast } from "../toast/toast";
 
 type DockMode = "chat" | "image" | "video";
 
@@ -32,7 +30,7 @@ export const FloatingPromptDock: React.FC<FloatingPromptDockProps> = ({
     sendMessage,
     generateDirectMedia,
     stopStreaming,
-    clearMessages,
+    clearActiveSessionMessages,
     setActiveModel,
   } = useChatStore();
 
@@ -192,7 +190,7 @@ export const FloatingPromptDock: React.FC<FloatingPromptDockProps> = ({
             {/* Clear/New Chat button */}
             <button
               type="button"
-              onClick={clearMessages}
+              onClick={clearActiveSessionMessages}
               className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors"
               title="Start a new chat session"
             >

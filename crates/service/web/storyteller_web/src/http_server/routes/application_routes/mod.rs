@@ -7,6 +7,7 @@ mod comments_routes;
 mod craft_apps_routes;
 mod credits_routes;
 mod dev_routes;
+mod developer_api_keys_routes;
 mod featured_item_routes;
 mod folders_routes;
 mod generate_routes;

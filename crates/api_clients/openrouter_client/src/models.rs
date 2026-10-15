@@ -45,6 +45,11 @@ impl ChatMessage {
   }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StreamOptions {
+  pub include_usage: bool,
+}
+
 /// Request body for OpenRouter chat completions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatCompletionRequest {
@@ -53,11 +58,15 @@ pub struct ChatCompletionRequest {
   #[serde(default)]
   pub stream: bool,
   #[serde(skip_serializing_if = "Option::is_none")]
+  pub stream_options: Option<StreamOptions>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub temperature: Option<f32>,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub max_tokens: Option<u32>,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub tools: Option<Vec<ToolDefinition>>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub user: Option<String>,
 }
 
 /// Tool definition conforming to OpenAI/OpenRouter standard.
@@ -117,6 +126,8 @@ pub struct ChatCompletionChunk {
   pub id: Option<String>,
   pub model: Option<String>,
   pub choices: Vec<ChatChunkChoice>,
+  #[serde(default)]
+  pub usage: Option<ChatUsage>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

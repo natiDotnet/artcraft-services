@@ -9,6 +9,7 @@ pub mod comments;
 pub mod craft_apps;
 pub mod credits;
 pub mod dev;
+pub mod developer_api_keys;
 pub mod download_job;
 pub mod featured_items;
 pub mod folders;

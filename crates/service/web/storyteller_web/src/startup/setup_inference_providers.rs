@@ -12,6 +12,7 @@ pub struct InferenceProviders {
   pub openai: OpenAiData,
   pub worldlabs: WorldLabsData,
   pub openrouter: OpenRouterData,
+  pub litellm: LiteLlmData,
 }
 
 /// Fal integration
@@ -72,6 +73,15 @@ pub struct OpenRouterData {
   pub app_name: String,
 }
 
+/// LiteLLM integration
+#[derive(Clone)]
+pub struct LiteLlmData {
+  pub api_key: String,
+  pub base_url: String,
+  pub default_model: String,
+  pub master_key: String,
+}
+
 pub fn setup_inference_providers() -> AnyhowResult<InferenceProviders> {
   Ok(InferenceProviders {
     fal: FalData {
@@ -109,6 +119,12 @@ pub fn setup_inference_providers() -> AnyhowResult<InferenceProviders> {
       default_model: easyenv::get_env_string_or_default("OPENROUTER_DEFAULT_MODEL", "deepseek/deepseek-chat"),
       site_url: easyenv::get_env_string_or_default("OPENROUTER_SITE_URL", "http://localhost:4201"),
       app_name: easyenv::get_env_string_or_default("OPENROUTER_APP_NAME", "ArtCraft Studio"),
+    },
+    litellm: LiteLlmData {
+      api_key: easyenv::get_env_string_or_default("LITELLM_API_KEY", "sk-litellm-master-key"),
+      base_url: easyenv::get_env_string_or_default("LITELLM_BASE_URL", "http://localhost:4000/v1"),
+      default_model: easyenv::get_env_string_or_default("LITELLM_DEFAULT_MODEL", "deepseek/deepseek-chat"),
+      master_key: easyenv::get_env_string_or_default("LITELLM_MASTER_KEY", "sk-litellm-master-key"),
     },
   })
 }

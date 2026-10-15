@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import {
   DownloadIcon,
-  PlayIcon,
   SparklesIcon,
   VideoIcon,
   ImageIcon,
   RefreshCwIcon,
   CopyIcon,
   CheckIcon,
-  ExternalLinkIcon,
   CoinsIcon,
 } from "lucide-react";
 import { ToolCallExecution, useChatStore } from "../../lib/chat-store";
@@ -25,7 +23,7 @@ export const MediaResultCard: React.FC<MediaResultCardProps> = ({
 }) => {
   const { executeToolCall, generateDirectMedia } = useChatStore();
   const [copied, setCopied] = useState(false);
-  const [isVideoLoading, setIsVideoLoading] = useState(true);
+  const [, setIsVideoLoading] = useState(true);
 
   const isImage = toolCall.name === "generate_image";
   const costEtb = isImage ? 10 : 20;

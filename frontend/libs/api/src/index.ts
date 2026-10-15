@@ -20,6 +20,7 @@ export * from "./lib/TtsApi.js";
 export * from "./lib/UserBookmarksApi.js";
 export * from "./lib/PasswordResetApi.js";
 export * from "./lib/UserApiKeysApi.js";
+export * from "./lib/DeveloperApiKeysApi.js";
 export * from "./lib/UserReferralCodesApi.js";
 export * from "./lib/UsersApi.js";
 export * from "./lib/LoginChallengesApi.js";
