@@ -12,6 +12,7 @@ pub struct InferenceProviders {
   pub openai: OpenAiData,
   pub worldlabs: WorldLabsData,
   pub openrouter: OpenRouterData,
+  pub gonkarouter: GonkaRouterData,
 }
 
 /// Fal integration
@@ -72,6 +73,13 @@ pub struct OpenRouterData {
   pub app_name: String,
 }
 
+/// Gonka Router integration
+#[derive(Clone)]
+pub struct GonkaRouterData {
+  pub api_key: String,
+  pub base_url: String,
+}
+
 pub fn setup_inference_providers() -> AnyhowResult<InferenceProviders> {
   Ok(InferenceProviders {
     fal: FalData {
@@ -115,6 +123,23 @@ pub fn setup_inference_providers() -> AnyhowResult<InferenceProviders> {
         default_model: easyenv::get_env_string_or_default("OPENROUTER_DEFAULT_MODEL", "deepseek/deepseek-chat"),
         site_url: easyenv::get_env_string_or_default("OPENROUTER_SITE_URL", "http://localhost:4201"),
         app_name: easyenv::get_env_string_or_default("OPENROUTER_APP_NAME", "ArtCraft Studio"),
+      }
+    },
+    gonkarouter: {
+      let mut key = easyenv::get_env_string_or_default("GONKA_API_KEY", "unset");
+      if key == "unset" || key.trim().is_empty() {
+        key = easyenv::get_env_string_or_default("GONKAROUTER_API_KEY", "unset");
+      }
+      if key == "unset" || key.trim().is_empty() {
+        let _ = easyenv::from_filename(".env");
+        key = easyenv::get_env_string_or_default("GONKA_API_KEY", "unset");
+        if key == "unset" || key.trim().is_empty() {
+          key = easyenv::get_env_string_or_default("GONKAROUTER_API_KEY", "unset");
+        }
+      }
+      GonkaRouterData {
+        api_key: key,
+        base_url: easyenv::get_env_string_or_default("GONKA_BASE_URL", "https://api.gonkarouter.io/v1"),
       }
     },
   })

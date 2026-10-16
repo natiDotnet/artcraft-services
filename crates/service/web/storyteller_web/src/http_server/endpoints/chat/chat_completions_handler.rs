@@ -17,7 +17,7 @@ use crate::billing::wallets::attempt_wallet_deduction::{
 };
 use crate::http_server::common_responses::common_web_error::CommonWebError;
 use crate::http_server::endpoints::chat::chat_pricing::{
-  calculate_token_cost_credits, get_model_pricing,
+  calculate_token_cost_credits, get_model_pricing, is_gonka_model, normalize_gonka_model,
 };
 use crate::http_server::endpoints::developer_api_keys::db::{
   get_user_and_token_by_developer_key, increment_key_spend,
@@ -122,24 +122,25 @@ pub async fn chat_completions_handler(
     (session.user_token, None)
   };
 
-  // 2. OpenRouter configuration check
   let openrouter_config = &server_state.inference_providers.openrouter;
-  if openrouter_config.api_key.trim().is_empty() || openrouter_config.api_key == "unset" {
-    return Err(CommonWebError::BadInputWithSimpleMessage(
-      "OpenRouter API key is not configured on the server. Please set OPENROUTER_API_KEY in .env"
-        .to_string(),
-    ));
-  }
+  let gonka_config = &server_state.inference_providers.gonkarouter;
 
-  let model = payload
+  let raw_model = payload
     .model
     .clone()
     .unwrap_or_else(|| openrouter_config.default_model.clone());
 
+  let is_gonka = is_gonka_model(&raw_model);
+  let target_model = if is_gonka {
+    normalize_gonka_model(&raw_model)
+  } else {
+    raw_model.clone()
+  };
+
   // 3. Pre-flight check: ensure user has active credits in their primary wallet,
   //    unless the requested model is free.
   let is_free_model = {
-    let pricing = get_model_pricing(&model);
+    let pricing = get_model_pricing(&raw_model);
     pricing.input_per_million == 0.0 && pricing.output_per_million == 0.0
   };
 
@@ -164,13 +165,53 @@ pub async fn chat_completions_handler(
     }
   }
 
-  let base_url = if openrouter_config.base_url.trim().is_empty() {
-    "https://openrouter.ai/api/v1".to_string()
-  } else {
-    openrouter_config.base_url.clone()
-  };
+  let client = if is_gonka {
+    let key = if !gonka_config.api_key.trim().is_empty() && gonka_config.api_key != "unset" {
+      &gonka_config.api_key
+    } else if !openrouter_config.api_key.trim().is_empty() && openrouter_config.api_key != "unset" {
+      &openrouter_config.api_key
+    } else {
+      return Err(CommonWebError::BadInputWithSimpleMessage(
+        "Gonka Router API key is not configured on the server. Please set GONKA_API_KEY in .env"
+          .to_string(),
+      ));
+    };
 
-  let client = OpenRouterClient::new(&openrouter_config.api_key).with_base_url(&base_url);
+    let base_url = if gonka_config.base_url.trim().is_empty() {
+      "https://api.gonkarouter.io/v1".to_string()
+    } else {
+      gonka_config.base_url.clone()
+    };
+
+    info!(
+      "Forwarding chat completion to Gonka Router ({}) with model: {}",
+      base_url, target_model
+    );
+    OpenRouterClient::new(key)
+      .with_base_url(&base_url)
+      .with_site_info("https://artcraft.ai", "ArtCraft Studio")
+  } else {
+    if openrouter_config.api_key.trim().is_empty() || openrouter_config.api_key == "unset" {
+      return Err(CommonWebError::BadInputWithSimpleMessage(
+        "OpenRouter API key is not configured on the server. Please set OPENROUTER_API_KEY in .env"
+          .to_string(),
+      ));
+    }
+
+    let base_url = if openrouter_config.base_url.trim().is_empty() {
+      "https://openrouter.ai/api/v1".to_string()
+    } else {
+      openrouter_config.base_url.clone()
+    };
+
+    info!(
+      "Forwarding chat completion to OpenRouter ({}) with model: {}",
+      base_url, target_model
+    );
+    OpenRouterClient::new(&openrouter_config.api_key)
+      .with_base_url(&base_url)
+      .with_site_info("https://artcraft.ai", "ArtCraft Studio")
+  };
 
   // 4. Map messages to standard format
   let mut messages: Vec<ChatMessage> = payload
@@ -198,7 +239,7 @@ pub async fn chat_completions_handler(
   }
 
   let request = ChatCompletionRequest {
-    model: model.clone(),
+    model: target_model.clone(),
     messages,
     stream: true,
     stream_options: Some(StreamOptions { include_usage: true }),
@@ -208,9 +249,9 @@ pub async fn chat_completions_handler(
     user: Some(user_token.to_string()),
   };
 
-  // 5. Connect and stream from OpenRouter
+  // 5. Connect and stream from provider
   let stream = client.stream_chat(request).await.map_err(|err| {
-    error!("OpenRouter streaming error: {:?}", err);
+    error!("Inference provider streaming error: {:?}", err);
     CommonWebError::BadInputWithSimpleMessage(format!("Inference provider error: {}", err))
   })?;
 
@@ -221,7 +262,7 @@ pub async fn chat_completions_handler(
   let pool = server_state.mysql_pool.clone();
   let bill_user_token = user_token.clone();
   let bill_dev_key_token = maybe_dev_key_token.clone();
-  let bill_model = model.clone();
+  let bill_model = raw_model.clone();
   let deduction_performed = Arc::new(AtomicBool::new(false));
 
   let sse_stream = stream.map(move |chunk_res| match chunk_res {

@@ -68,6 +68,16 @@ const CHAT_MODEL_FAMILIES: ChatModelFamilyDef[] = [
       m.provider.toLowerCase().includes("anthropic"),
   },
   {
+    id: "minimax",
+    name: "MiniMax",
+    provider: "MiniMax",
+    icon: <SparklesIcon className="h-4 w-4 text-purple-400" />,
+    matches: (m) =>
+      m.family?.toLowerCase() === "minimax" ||
+      m.id.toLowerCase().startsWith("minimax") ||
+      /minimax/i.test(m.name),
+  },
+  {
     id: "glm",
     name: "GLM",
     provider: "Zhipu AI",
@@ -76,6 +86,7 @@ const CHAT_MODEL_FAMILIES: ChatModelFamilyDef[] = [
       m.family?.toLowerCase() === "glm" ||
       m.id.startsWith("thudm/") ||
       m.id.startsWith("zhipu/") ||
+      m.id.startsWith("zai-org/") ||
       /glm/i.test(m.name) ||
       m.provider.toLowerCase().includes("zhipu"),
   },
@@ -87,6 +98,7 @@ const CHAT_MODEL_FAMILIES: ChatModelFamilyDef[] = [
     matches: (m) =>
       m.family?.toLowerCase() === "deepseek" ||
       m.id.startsWith("deepseek/") ||
+      m.id.startsWith("deepseek-ai/") ||
       /deepseek/i.test(m.name) ||
       m.provider.toLowerCase().includes("deepseek"),
   },

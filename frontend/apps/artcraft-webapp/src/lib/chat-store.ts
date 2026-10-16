@@ -253,41 +253,42 @@ export const DEFAULT_CHAT_MODELS: ChatModelDto[] = [
     badge: "Long Context",
     description: "High reasoning power with up to 2 million token context window (450 ETB / 1M tokens)",
   },
+  // --- Gonka Router Models (Grouped by real family) ---
   {
-    id: "deepseek/deepseek-v4-flash-0731",
-    name: "DeepSeek V4 Flash",
-    provider: "DeepSeek",
-    family: "DeepSeek",
-    cost_credits: 1,
-    price_per_1m_tokens_etb: 69.0,
-    input_price_per_1m_etb: 3.38,
-    output_price_per_1m_etb: 135.36,
-    badge: "Next-Gen Flash",
-    description: "Ultra-fast low-latency DeepSeek reasoning and dialogue (69 ETB / 1M tokens)",
-  },
-  {
-    id: "z-ai/glm-5.3-flash",
-    name: "GLM 5.3 Flash",
-    provider: "Zhipu AI",
-    family: "GLM",
-    cost_credits: 1,
-    price_per_1m_tokens_etb: 110.0,
-    input_price_per_1m_etb: 8.46,
-    output_price_per_1m_etb: 211.5,
-    badge: "Flash & Fast",
-    description: "Next-gen lightning-fast bilingual intelligence (110 ETB / 1M tokens)",
-  },
-  {
-    id: "minimax/minimax-m2.7",
+    id: "MiniMaxAI/MiniMax-M2.7",
     name: "MiniMax M2.7",
-    provider: "MiniMax",
+    provider: "Gonka Router",
     family: "MiniMax",
     cost_credits: 1,
-    price_per_1m_tokens_etb: 123.0,
-    input_price_per_1m_etb: 49.35,
-    output_price_per_1m_etb: 197.4,
-    badge: "Reasoning & Code",
-    description: "Advanced conversational reasoning with high context efficiency (123 ETB / 1M tokens)",
+    price_per_1m_tokens_etb: 1.0,
+    input_price_per_1m_etb: 1.0,
+    output_price_per_1m_etb: 1.0,
+    badge: "1 ETB / 1M",
+    description: "MiniMax M2.7 conversational model via Gonka Router (1 ETB / 1M tokens)",
+  },
+  {
+    id: "zai-org/GLM-5.3-Flash",
+    name: "GLM 5.3 Flash",
+    provider: "Gonka Router",
+    family: "GLM",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 1.0,
+    input_price_per_1m_etb: 1.0,
+    output_price_per_1m_etb: 1.0,
+    badge: "1 ETB / 1M",
+    description: "Next-gen lightning-fast bilingual model via Gonka Router (1 ETB / 1M tokens)",
+  },
+  {
+    id: "deepseek-ai/DeepSeek-V4-Flash-0731",
+    name: "DeepSeek V4 Flash",
+    provider: "Gonka Router",
+    family: "DeepSeek",
+    cost_credits: 1,
+    price_per_1m_tokens_etb: 1.0,
+    input_price_per_1m_etb: 1.0,
+    output_price_per_1m_etb: 1.0,
+    badge: "1 ETB / 1M",
+    description: "Ultra-fast low-latency DeepSeek model via Gonka Router (1 ETB / 1M tokens)",
   },
 
   // --- NVIDIA Family (Free) ---
@@ -634,8 +635,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const api = new ChatApi();
       const res = await api.ListModels();
       if (res.success && res.data?.models && res.data.models.length > 0) {
+        const backendIds = new Set(res.data.models.map((m: any) => m.id));
+        const merged = [
+          ...res.data.models,
+          ...DEFAULT_CHAT_MODELS.filter((m) => !backendIds.has(m.id)),
+        ];
         set({
-          availableModels: res.data.models,
+          availableModels: merged,
           activeModel: res.data.default_model || get().activeModel,
         });
       }

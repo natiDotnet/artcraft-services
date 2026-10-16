@@ -112,27 +112,51 @@ pub const SUPPORTED_CHAT_MODELS: &[(&str, &str, ModelPricing)] = &[
     },
   ),
   (
-    "z-ai/glm-5.3-flash",
-    "zhipu",
+    "MiniMaxAI/MiniMax-M2.7",
+    "minimax",
     ModelPricing {
-      input_per_million: 8.46,
-      output_per_million: 211.5,
-    },
-  ),
-  (
-    "deepseek/deepseek-v4-flash-0731",
-    "deepseek",
-    ModelPricing {
-      input_per_million: 3.38,
-      output_per_million: 135.36,
+      input_per_million: 1.0,
+      output_per_million: 1.0,
     },
   ),
   (
     "minimax/minimax-m2.7",
     "minimax",
     ModelPricing {
-      input_per_million: 49.35,
-      output_per_million: 197.4,
+      input_per_million: 1.0,
+      output_per_million: 1.0,
+    },
+  ),
+  (
+    "zai-org/GLM-5.3-Flash",
+    "zhipu",
+    ModelPricing {
+      input_per_million: 1.0,
+      output_per_million: 1.0,
+    },
+  ),
+  (
+    "z-ai/glm-5.3-flash",
+    "zhipu",
+    ModelPricing {
+      input_per_million: 1.0,
+      output_per_million: 1.0,
+    },
+  ),
+  (
+    "deepseek-ai/DeepSeek-V4-Flash-0731",
+    "deepseek",
+    ModelPricing {
+      input_per_million: 1.0,
+      output_per_million: 1.0,
+    },
+  ),
+  (
+    "deepseek/deepseek-v4-flash-0731",
+    "deepseek",
+    ModelPricing {
+      input_per_million: 1.0,
+      output_per_million: 1.0,
     },
   ),
   (
@@ -286,17 +310,63 @@ const DEFAULT_PRICING: ModelPricing = ModelPricing {
   output_per_million: 50.0,
 };
 
+/// Check if a model is routed through Gonka Router
+pub fn is_gonka_model(model_id: &str) -> bool {
+  let trimmed = model_id.trim();
+  let stripped = trimmed.strip_prefix("gonka/").unwrap_or(trimmed);
+  stripped.eq_ignore_ascii_case("MiniMaxAI/MiniMax-M2.7")
+    || stripped.eq_ignore_ascii_case("minimax/minimax-m2.7")
+    || stripped.eq_ignore_ascii_case("minimaxai/minimax-m2.7")
+    || stripped.eq_ignore_ascii_case("zai-org/GLM-5.3-Flash")
+    || stripped.eq_ignore_ascii_case("z-ai/glm-5.3-flash")
+    || stripped.eq_ignore_ascii_case("deepseek-ai/DeepSeek-V4-Flash-0731")
+    || stripped.eq_ignore_ascii_case("deepseek/deepseek-v4-flash-0731")
+}
+
+/// Normalize model slug to Gonka Router's official model ID
+pub fn normalize_gonka_model(model_id: &str) -> String {
+  let trimmed = model_id.trim();
+  let stripped = trimmed.strip_prefix("gonka/").unwrap_or(trimmed);
+  if stripped.eq_ignore_ascii_case("MiniMaxAI/MiniMax-M2.7")
+    || stripped.eq_ignore_ascii_case("minimax/minimax-m2.7")
+    || stripped.eq_ignore_ascii_case("minimaxai/minimax-m2.7")
+  {
+    "MiniMaxAI/MiniMax-M2.7".to_string()
+  } else if stripped.eq_ignore_ascii_case("zai-org/GLM-5.3-Flash")
+    || stripped.eq_ignore_ascii_case("z-ai/glm-5.3-flash")
+  {
+    "zai-org/GLM-5.3-Flash".to_string()
+  } else if stripped.eq_ignore_ascii_case("deepseek-ai/DeepSeek-V4-Flash-0731")
+    || stripped.eq_ignore_ascii_case("deepseek/deepseek-v4-flash-0731")
+  {
+    "deepseek-ai/DeepSeek-V4-Flash-0731".to_string()
+  } else {
+    stripped.to_string()
+  }
+}
+
 /// Get the pricing rules for a model ID.
 pub fn get_model_pricing(model_id: &str) -> ModelPricing {
   let trimmed = model_id.trim();
-  if trimmed.ends_with(":free") {
+  let stripped = trimmed.strip_prefix("gonka/").unwrap_or(trimmed);
+
+  if stripped.ends_with(":free") {
     return ModelPricing {
       input_per_million: 0.0,
       output_per_million: 0.0,
     };
   }
+
+  // Gonka Router models are charged at exactly 1 ETB per 1M tokens
+  if is_gonka_model(stripped) {
+    return ModelPricing {
+      input_per_million: 1.0,
+      output_per_million: 1.0,
+    };
+  }
+
   for (id, _, pricing) in SUPPORTED_CHAT_MODELS {
-    if trimmed.eq_ignore_ascii_case(id) {
+    if stripped.eq_ignore_ascii_case(id) {
       return *pricing;
     }
   }
