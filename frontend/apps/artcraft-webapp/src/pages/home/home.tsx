@@ -18,6 +18,11 @@ import { DynamicIcon } from "@storyteller/icons";
 import Seo from "../../components/seo";
 import { Reveal, RevealGroup } from "../../components/motion/reveal";
 
+// ── App Cards Visibility Flags ─────────────────────────────────────────────
+// Toggle these booleans to show/hide apps on the home page at will.
+export const SHOW_3D_APPS = false; // 3D Object, 3D World
+export const SHOW_STUDIO_APPS = false; // Edit 3D, Background Change, Edit Video, Moodboard, Frame Extractor
+
 type AppCard = {
   label: string;
   description: string;
@@ -53,65 +58,73 @@ const APPS: AppCard[] = [
     iconTile: "border-pink-400/40 bg-pink-500/20 text-pink-300",
     hoverStyle: "hover:border-pink-400/60 hover:bg-pink-500/10",
   },
-  {
-    label: "3D Object",
-    description: "Turn a prompt or image into a 3D model.",
-    href: "/create-object",
-    icon: BoxIcon,
-    iconTile: "border-cyan-400/40 bg-cyan-500/20 text-cyan-300",
-    hoverStyle: "hover:border-cyan-400/60 hover:bg-cyan-500/10",
-  },
-  {
-    label: "3D World",
-    description: "Turn a prompt or image into an explorable world.",
-    href: "/create-world",
-    icon: GlobeIcon,
-    iconTile: "border-teal-400/40 bg-teal-500/20 text-teal-300",
-    hoverStyle: "hover:border-teal-400/60 hover:bg-teal-500/10",
-  },
-  {
-    label: "Edit 3D",
-    description: "Compose 3D scenes and render with AI cameras.",
-    href: "/edit-3d",
-    icon: BoxIcon,
-    iconTile: "border-amber-400/40 bg-amber-500/20 text-amber-300",
-    hoverStyle: "hover:border-amber-400/60 hover:bg-amber-500/10",
-  },
-  {
-    label: "Background Change",
-    description: "Swap or remove backgrounds with AI VFX.",
-    href: "/background-change",
-    icon: WandSparklesIcon,
-    iconTile: "border-emerald-400/40 bg-emerald-500/20 text-emerald-300",
-    hoverStyle: "hover:border-emerald-400/60 hover:bg-emerald-500/10",
-  },
-  {
-    label: "Edit Video",
-    description: "Trim, arrange, and edit clips on a timeline.",
-    href: "/video-editor",
-    icon: FilmIcon,
-    iconTile: "border-rose-400/40 bg-rose-500/20 text-rose-300",
-    hoverStyle: "hover:border-rose-400/60 hover:bg-rose-500/10",
-    badge: "BETA",
-  },
-  {
-    label: "Moodboard",
-    description: "Collect references and ideas to steer a generation.",
-    href: "/moodboard",
-    icon: GroupIcon,
-    iconTile: "border-indigo-400/40 bg-indigo-500/20 text-indigo-300",
-    hoverStyle: "hover:border-indigo-400/60 hover:bg-indigo-500/10",
-    badge: "BETA",
-  },
-  {
-    label: "Frame Extractor",
-    description: "Grab a still frame from any video.",
-    href: "/frame-extractor",
-    icon: ImagesIcon,
-    iconTile: "border-orange-400/40 bg-orange-500/20 text-orange-300",
-    hoverStyle: "hover:border-orange-400/60 hover:bg-orange-500/10",
-    badge: "NEW",
-  },
+  ...(SHOW_3D_APPS
+    ? [
+        {
+          label: "3D Object",
+          description: "Turn a prompt or image into a 3D model.",
+          href: "/create-object",
+          icon: BoxIcon,
+          iconTile: "border-cyan-400/40 bg-cyan-500/20 text-cyan-300",
+          hoverStyle: "hover:border-cyan-400/60 hover:bg-cyan-500/10",
+        },
+        {
+          label: "3D World",
+          description: "Turn a prompt or image into an explorable world.",
+          href: "/create-world",
+          icon: GlobeIcon,
+          iconTile: "border-teal-400/40 bg-teal-500/20 text-teal-300",
+          hoverStyle: "hover:border-teal-400/60 hover:bg-teal-500/10",
+        },
+      ]
+    : []),
+  ...(SHOW_STUDIO_APPS
+    ? [
+        {
+          label: "Edit 3D",
+          description: "Compose 3D scenes and render with AI cameras.",
+          href: "/edit-3d",
+          icon: BoxIcon,
+          iconTile: "border-amber-400/40 bg-amber-500/20 text-amber-300",
+          hoverStyle: "hover:border-amber-400/60 hover:bg-amber-500/10",
+        },
+        {
+          label: "Background Change",
+          description: "Swap or remove backgrounds with AI VFX.",
+          href: "/background-change",
+          icon: WandSparklesIcon,
+          iconTile: "border-emerald-400/40 bg-emerald-500/20 text-emerald-300",
+          hoverStyle: "hover:border-emerald-400/60 hover:bg-emerald-500/10",
+        },
+        {
+          label: "Edit Video",
+          description: "Trim, arrange, and edit clips on a timeline.",
+          href: "/video-editor",
+          icon: FilmIcon,
+          iconTile: "border-rose-400/40 bg-rose-500/20 text-rose-300",
+          hoverStyle: "hover:border-rose-400/60 hover:bg-rose-500/10",
+          badge: "BETA",
+        },
+        {
+          label: "Moodboard",
+          description: "Collect references and ideas to steer a generation.",
+          href: "/moodboard",
+          icon: GroupIcon,
+          iconTile: "border-indigo-400/40 bg-indigo-500/20 text-indigo-300",
+          hoverStyle: "hover:border-indigo-400/60 hover:bg-indigo-500/10",
+          badge: "BETA",
+        },
+        {
+          label: "Frame Extractor",
+          description: "Grab a still frame from any video.",
+          href: "/frame-extractor",
+          icon: ImagesIcon,
+          iconTile: "border-orange-400/40 bg-orange-500/20 text-orange-300",
+          hoverStyle: "hover:border-orange-400/60 hover:bg-orange-500/10",
+          badge: "NEW",
+        },
+      ]
+    : []),
 ];
 
 export function Home() {

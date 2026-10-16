@@ -41,6 +41,11 @@ import { CreditsModal } from "../credits-modal";
 import { SettingsModal } from "../settings-modal/SettingsModal";
 import { TaskQueue } from "./task-queue";
 
+// ── TopBar Dropdown Menu Visibility Flags ──────────────────────────────────
+// Toggle these booleans to show/hide Support and Discord in the user menu at will.
+export const SHOW_SUPPORT_MENU = false;
+export const SHOW_DISCORD_MENU = false;
+
 async function fetchCredits(): Promise<number | null> {
   try {
     const response = await new CreditsApi().GetSessionCredits();
@@ -212,20 +217,22 @@ export function TopBarActions({ className }: { className?: string }) {
                     </button>
                   )}
                 </MenuItem>
-                <MenuItem>
-                  {({ active }) => (
-                    <button
-                      onClick={() => navigate("/support")}
-                      className={twMerge(
-                        active ? "bg-white/10" : "",
-                        "flex w-full items-center gap-2 px-4 py-2 text-sm text-base-fg/80 transition-colors",
-                      )}
-                    >
-                      <LifeBuoyIcon className="text-[11px] text-base-fg/50" />
-                      Support
-                    </button>
-                  )}
-                </MenuItem>
+                {SHOW_SUPPORT_MENU && (
+                  <MenuItem>
+                    {({ active }) => (
+                      <button
+                        onClick={() => navigate("/support")}
+                        className={twMerge(
+                          active ? "bg-white/10" : "",
+                          "flex w-full items-center gap-2 px-4 py-2 text-sm text-base-fg/80 transition-colors",
+                        )}
+                      >
+                        <LifeBuoyIcon className="text-[11px] text-base-fg/50" />
+                        Support
+                      </button>
+                    )}
+                  </MenuItem>
+                )}
                 {user.maybe_feature_flags?.includes(
                   USER_FEATURE_FLAGS.REFERRALS,
                 ) && (
@@ -244,22 +251,24 @@ export function TopBarActions({ className }: { className?: string }) {
                     )}
                   </MenuItem>
                 )}
-                <MenuItem>
-                  {({ active }) => (
-                    <a
-                      href={SOCIAL_LINKS.DISCORD}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={twMerge(
-                        active ? "bg-white/10" : "",
-                        "flex w-full items-center gap-2 px-4 py-2 text-sm text-base-fg/80 transition-colors",
-                      )}
-                    >
-                      <DiscordIcon className="text-[11px] text-base-fg/50" />
-                      Join Discord
-                    </a>
-                  )}
-                </MenuItem>
+                {SHOW_DISCORD_MENU && (
+                  <MenuItem>
+                    {({ active }) => (
+                      <a
+                        href={SOCIAL_LINKS.DISCORD}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={twMerge(
+                          active ? "bg-white/10" : "",
+                          "flex w-full items-center gap-2 px-4 py-2 text-sm text-base-fg/80 transition-colors",
+                        )}
+                      >
+                        <DiscordIcon className="text-[11px] text-base-fg/50" />
+                        Join Discord
+                      </a>
+                    )}
+                  </MenuItem>
+                )}
                 <MenuItem>
                   {({ active }) => (
                     <button

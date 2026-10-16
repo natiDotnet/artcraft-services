@@ -43,12 +43,20 @@ import { MARKETING_SITE, SOCIAL_LINKS } from "../../config/links";
 import { useSceneCacheStore } from "../../pages/pagescene/scene-cache-store";
 import { LibraryFoldersNav } from "./library-folders-nav";
 
+// ── Menu Visibility Flags ──────────────────────────────────────────────────
+// Toggle these booleans to show/hide menus at will.
+export const SHOW_3D_MENUS = false; // 3D Object, 3D World
+export const SHOW_STUDIO_MENUS = false; // Edit Image, Edit 3D, Edit Video, BG Change, Moodboard, Frame Extract
+export const SHOW_RESOURCES_MENUS = false; // Tutorials, News, FAQ
+export const SHOW_SUPPORT_MENUS = false; // Join Discord, Support
+
 type NavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
   external?: boolean;
   badge?: string;
+  hidden?: boolean;
 };
 
 const PRIMARY_ITEMS: NavItem[] = [
@@ -61,8 +69,12 @@ const CREATE_ITEMS_STATIC: NavItem[] = [
   { label: "Image", href: "/create-image", icon: ImageIcon },
   { label: "Video", href: "/create-video", icon: VideoIcon },
   { label: "Audio", href: "/create-audio", icon: MusicIcon },
-  { label: "3D Object", href: "/create-object", icon: BoxIcon },
-  { label: "3D World", href: "/create-world", icon: GlobeIcon },
+  ...(SHOW_3D_MENUS
+    ? [
+        { label: "3D Object", href: "/create-object", icon: BoxIcon },
+        { label: "3D World", href: "/create-world", icon: GlobeIcon },
+      ]
+    : []),
 ];
 
 // "Studio" entries — edit, compose, and refine existing content. "Edit 3D"'s
@@ -222,6 +234,7 @@ function NavSection({
   onClick: () => void;
   className?: string;
 }) {
+  if (!items || items.length === 0) return null;
   return (
     <SidebarGroup className={className}>
       {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
@@ -290,12 +303,14 @@ export function AppSidebar() {
           pathname={pathname}
           onClick={handleNavClick}
         />
-        <NavSection
-          label="Studio"
-          items={studioItems}
-          pathname={pathname}
-          onClick={handleNavClick}
-        />
+        {SHOW_STUDIO_MENUS && (
+          <NavSection
+            label="Studio"
+            items={studioItems}
+            pathname={pathname}
+            onClick={handleNavClick}
+          />
+        )}
         <LibraryFoldersNav pathname={pathname} onNavClick={handleNavClick} />
         {hasReferralsFlag && (
           <NavSection
@@ -305,18 +320,22 @@ export function AppSidebar() {
             onClick={handleNavClick}
           />
         )}
-        <NavSection
-          label="Resources"
-          items={RESOURCES_ITEMS}
-          pathname={pathname}
-          onClick={handleNavClick}
-        />
-        <NavSection
-          label="Support"
-          items={SUPPORT_ITEMS}
-          pathname={pathname}
-          onClick={handleNavClick}
-        />
+        {SHOW_RESOURCES_MENUS && (
+          <NavSection
+            label="Resources"
+            items={RESOURCES_ITEMS}
+            pathname={pathname}
+            onClick={handleNavClick}
+          />
+        )}
+        {SHOW_SUPPORT_MENUS && (
+          <NavSection
+            label="Support"
+            items={SUPPORT_ITEMS}
+            pathname={pathname}
+            onClick={handleNavClick}
+          />
+        )}
       </SidebarContent>
 
       <SidebarFooter className="group-data-[collapsible=icon]:hidden">
